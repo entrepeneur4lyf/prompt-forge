@@ -78,8 +78,13 @@ export default function TemplatesPage() {
   });
 
   const handleEdit = (template: Template) => {
-    setEditingTemplate(template);
-    setSelectedTemplate(null); 
+    setSelectedTemplate(null);
+    setEditingTemplate({
+      ...template,
+      // Ensure all required fields are present
+      agentType: template.agentType || null,
+      methodologies: template.methodologies || [],
+    });
   };
 
   const handleSubmit = async (template: Partial<Template>) => {
