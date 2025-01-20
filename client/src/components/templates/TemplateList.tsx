@@ -1,4 +1,4 @@
-import { Template, templateDomains, agentTypes, modelTypes } from '@/lib/types';
+import { Template, templateDomains, providerTypes, modelTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,7 +31,7 @@ export default function TemplateList({
     return templates.filter(template => template.domain === selectedDomain);
   }, [templates, selectedDomain]);
 
-  const getBadgeVariant = (type: 'domain' | 'agent' | 'model', value: string) => {
+  const getBadgeVariant = (type: 'domain' | 'provider' | 'model', value: string) => {
     if (type === 'domain') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Code': 'default',
@@ -42,13 +42,13 @@ export default function TemplateList({
         'Meta': 'outline'
       };
       return variants[value] || 'default';
-    } else if (type === 'agent') {
+    } else if (type === 'provider') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-        'Replit': 'outline',
-        'Cursor': 'secondary',
-        'Claude': 'default',
-        'DeepSeek': 'destructive',
-        'Browser Agent': 'secondary'
+        'OpenAI': 'outline',
+        'Anthropic': 'secondary',
+        'Replit': 'default',
+        'Deepseek': 'destructive',
+        'Gemini': 'secondary'
       };
       return variants[value] || 'default';
     } else {
@@ -140,11 +140,9 @@ export default function TemplateList({
                   <Badge variant={getBadgeVariant('domain', template.domain)}>
                     {template.domain}
                   </Badge>
-                  {template.agentEnhanced && template.agentType && (
-                    <Badge variant={getBadgeVariant('agent', template.agentType)}>
-                      {template.agentType}
-                    </Badge>
-                  )}
+                  <Badge variant={getBadgeVariant('provider', template.providerType)}>
+                    {template.providerType}
+                  </Badge>
                   {template.modelType && (
                     <Badge variant={getBadgeVariant('model', template.modelType)}>
                       {template.modelType}

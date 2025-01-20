@@ -1,5 +1,4 @@
 export const templateDomains = ['Code', 'General', 'Marketing', 'Education', 'Creative Writing', 'Meta'] as const;
-export const agentTypes = ['Cursor', 'Replit', 'Claude', 'DeepSeek', 'Browser Agent'] as const;
 export const modelTypes = [
   'Claude-Sonnet-3.5',
   'GPT-3.5-Turbo',
@@ -13,7 +12,7 @@ export const modelTypes = [
   'Deepseek-Coder',
   'Gemini-Pro'
 ] as const;
-export const roleTypes = ['Architect', 'Developer', 'Tester'] as const;
+export const roleTypes = ['None', 'Architect', 'Developer', 'Tester'] as const;
 export const methodologyTypes = [
   'TDD',
   'BDD',
@@ -24,11 +23,13 @@ export const methodologyTypes = [
   'DRY'
 ] as const;
 
+export const providerTypes = ['OpenAI', 'Anthropic', 'Replit', 'Deepseek', 'Gemini'] as const;
+
 export type TemplateDomain = typeof templateDomains[number];
-export type AgentType = typeof agentTypes[number];
 export type ModelType = typeof modelTypes[number];
 export type RoleType = typeof roleTypes[number];
 export type MethodologyType = typeof methodologyTypes[number];
+export type ProviderType = typeof providerTypes[number];
 
 export interface Template {
   id: number;
@@ -36,8 +37,7 @@ export interface Template {
   content: string;
   isCore: boolean;
   domain: TemplateDomain;
-  agentEnhanced: boolean;
-  agentType: AgentType | null;
+  providerType: ProviderType;
   modelType: ModelType;
   roleType: RoleType;
   methodologies: MethodologyType[];
@@ -50,8 +50,7 @@ export interface CreateTemplateInput {
   content: string;
   isCore: boolean;
   domain: TemplateDomain;
-  agentEnhanced: boolean;
-  agentType: AgentType | null;
+  providerType: ProviderType;
   modelType: ModelType;
   roleType: RoleType;
   methodologies: MethodologyType[];

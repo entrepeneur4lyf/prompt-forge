@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Template, CreateTemplateInput, templateDomains, agentTypes, modelTypes, roleTypes, methodologyTypes } from '@/lib/types';
+import { Template, CreateTemplateInput, templateDomains, modelTypes, roleTypes, methodologyTypes, providerTypes, ModelType, ProviderType } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -23,26 +23,33 @@ const templateFormSchema = z.object({
   content: z.string().min(1, "Content is required"),
   isCore: z.boolean(),
   domain: z.enum(templateDomains),
-  agentEnhanced: z.boolean(),
-  agentType: z.enum(agentTypes).nullable(),
+  providerType: z.enum(providerTypes),
   modelType: z.enum(modelTypes),
-  roleType: z.enum([...roleTypes, 'None'] as const),
+  roleType: z.enum(roleTypes),
   methodologies: z.array(z.enum(methodologyTypes))
-}).refine((data) => {
-  if (data.agentEnhanced && !data.agentType) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Agent type must be selected when agent enhancement is enabled",
-  path: ["agentType"]
 });
 
 type FormData = z.infer<typeof templateFormSchema>;
 
-export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
-  console.log('Template Form received template:', template); // Debug log
+// Get available models for a specific provider
+const getModelsForProvider = (provider: ProviderType): ModelType[] => {
+  switch (provider) {
+    case 'OpenAI':
+      return ['GPT-3.5-Turbo', 'GPT-4', 'GPT-4-Turbo'];
+    case 'Anthropic':
+      return ['Claude-Sonnet-3.5', 'Claude-Sonnet', 'Claude-Haiku', 'Claude-Opus'];
+    case 'Replit':
+      return ['Replit-Code', 'Replit-Chat'];
+    case 'Deepseek':
+      return ['Deepseek-Coder'];
+    case 'Gemini':
+      return ['Gemini-Pro'];
+    default:
+      return [];
+  }
+};
 
+export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -50,25 +57,24 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       content: template?.content || '',
       isCore: template?.isCore || false,
       domain: template?.domain || 'Code',
-      agentEnhanced: template?.agentEnhanced || false,
-      agentType: template?.agentType || null,
+      providerType: template?.providerType || 'Anthropic',
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
       roleType: template?.roleType || 'None',
       methodologies: template?.methodologies || [],
     },
   });
 
-  // Update form when template changes
+  const selectedProvider = form.watch('providerType') as ProviderType;
+  const availableModels = getModelsForProvider(selectedProvider);
+
   useEffect(() => {
     if (template) {
-      console.log('Resetting form with template:', template); // Debug log
       form.reset({
         name: template.name,
         content: template.content,
         isCore: template.isCore,
         domain: template.domain,
-        agentEnhanced: template.agentEnhanced,
-        agentType: template.agentType,
+        providerType: template.providerType,
         modelType: template.modelType,
         roleType: template.roleType,
         methodologies: template.methodologies,
@@ -76,16 +82,20 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
     }
   }, [template, form]);
 
-  const agentEnhanced = form.watch('agentEnhanced');
+  useEffect(() => {
+    const currentModel = form.getValues('modelType');
+    if (!availableModels.includes(currentModel)) {
+      form.setValue('modelType', availableModels[0]);
+    }
+  }, [selectedProvider, availableModels, form]);
 
   const handleSubmit = (data: FormData) => {
-    console.log('Form submitting data:', data); // Debug log
     onSubmit(template?.id ? { ...data, id: template.id } : data);
   };
 
   return (
-    <Card className="p-4 mt-4">
-      <h2 className="text-xl font-semibold mb-4">
+    <Card className="p-6">
+      <h2 className="text-xl font-bold mb-6">
         {template?.id ? 'Edit Template' : 'Create Template'}
       </h2>
 
@@ -151,74 +161,49 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
 
             <FormField
               control={form.control}
-              name="agentEnhanced"
+              name="providerType"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Agent Enhancement
-                    </FormLabel>
-                    <FormDescription>
-                      Enable agent-specific prompt enhancement
-                    </FormDescription>
-                  </div>
+                <FormItem>
+                  <FormLabel>Provider</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select provider" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {providerTypes.map((provider) => (
+                        <SelectItem key={provider} value={provider}>
+                          {provider}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            {agentEnhanced && (
-              <FormField
-                control={form.control}
-                name="agentType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Agent Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value || undefined}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select agent type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {agentTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}
               name="modelType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Model Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Model</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={!selectedProvider}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select model" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {modelTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
+                      {availableModels.map((model) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -240,14 +225,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       defaultValue={field.value}
                       className="grid grid-cols-2 gap-4"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="None" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          None
-                        </FormLabel>
-                      </FormItem>
                       {roleTypes.map((role) => (
                         <FormItem key={role} className="flex items-center space-x-3 space-y-0">
                           <FormControl>
@@ -291,8 +268,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                                   return checked
                                     ? field.onChange([...field.value, methodology])
                                     : field.onChange(
-                                        field.value?.filter((value) => value !== methodology)
-                                      );
+                                      field.value?.filter((value) => value !== methodology)
+                                    );
                                 }}
                               />
                             </FormControl>
