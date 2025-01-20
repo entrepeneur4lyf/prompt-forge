@@ -24,7 +24,8 @@ export interface Template {
   content: string;
   isCore: boolean;
   domain: TemplateDomain;
-  agentType: AgentType;
+  agentEnhanced: boolean;
+  agentType: AgentType | null;
   modelType: ModelType;
   roleType: RoleType;
   methodologies: MethodologyType[];
@@ -37,7 +38,8 @@ export interface CreateTemplateInput {
   content: string;
   isCore: boolean;
   domain: TemplateDomain;
-  agentType: AgentType;
+  agentEnhanced: boolean;
+  agentType: AgentType | null;
   modelType: ModelType;
   roleType: RoleType;
   methodologies: MethodologyType[];

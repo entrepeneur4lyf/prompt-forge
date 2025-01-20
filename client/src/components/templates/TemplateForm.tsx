@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface TemplateFormProps {
   template: Template | null;
   onSubmit: (template: CreateTemplateInput & { id?: number }) => void;
-  onCancel: () => void;  // Add this prop
+  onCancel: () => void;
 }
 
 export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
@@ -21,12 +21,15 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       content: template?.content || '',
       isCore: template?.isCore || false,
       domain: template?.domain || 'Code',
-      agentType: template?.agentType || 'Replit',
+      agentEnhanced: template?.agentEnhanced || false,
+      agentType: template?.agentType || null,
       modelType: template?.modelType || 'Gemini',
       roleType: template?.roleType || 'Developer',
       methodologies: template?.methodologies || [],
     },
   });
+
+  const agentEnhanced = form.watch('agentEnhanced');
 
   return (
     <Card className="p-4 mt-4">
@@ -93,27 +96,55 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
 
             <FormField
               control={form.control}
-              name="agentType"
+              name="agentEnhanced"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Agent Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select agent" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {agentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Agent Enhancement
+                    </FormLabel>
+                    <FormDescription>
+                      Enable agent-specific prompt enhancement
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
+
+            {agentEnhanced && (
+              <FormField
+                control={form.control}
+                name="agentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agent Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select agent type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {agentTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -190,7 +221,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                                     ? field.onChange([...field.value, methodology])
                                     : field.onChange(
                                         field.value?.filter((value) => value !== methodology)
-                                      )
+                                      );
                                 }}
                               />
                             </FormControl>
@@ -198,7 +229,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                               {methodology}
                             </FormLabel>
                           </FormItem>
-                        )
+                        );
                       }}
                     />
                   ))}

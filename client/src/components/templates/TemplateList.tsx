@@ -31,15 +31,27 @@ export default function TemplateList({
     return templates.filter(template => template.domain === selectedDomain);
   }, [templates, selectedDomain]);
 
-  const getBadgeVariant = (domain: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      'Code': 'default',
-      'General': 'secondary',
-      'Marketing': 'outline',
-      'Education': 'destructive',
-      'Creative Writing': 'secondary'
-    };
-    return variants[domain] || 'default';
+  const getBadgeVariant = (type: 'domain' | 'agent', value: string) => {
+    if (type === 'domain') {
+      const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+        'Code': 'default',
+        'General': 'secondary',
+        'Marketing': 'outline',
+        'Education': 'destructive',
+        'Creative Writing': 'secondary'
+      };
+      return variants[value] || 'default';
+    } else {
+      // Agent type badges use a different color scheme
+      const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+        'Replit': 'outline',
+        'Cursor': 'secondary',
+        'Claude': 'default',
+        'DeepSeek': 'destructive',
+        'Browser Agent': 'secondary'
+      };
+      return variants[value] || 'default';
+    }
   };
 
   return (
@@ -109,10 +121,15 @@ export default function TemplateList({
                     </Button>
                   </div>
                 </div>
-                <div className="mt-2">
-                  <Badge variant={getBadgeVariant(template.domain)}>
+                <div className="mt-2 flex gap-2">
+                  <Badge variant={getBadgeVariant('domain', template.domain)}>
                     {template.domain}
                   </Badge>
+                  {template.agentEnhanced && template.agentType && (
+                    <Badge variant={getBadgeVariant('agent', template.agentType)}>
+                      {template.agentType}
+                    </Badge>
+                  )}
                 </div>
               </div>
             ))}

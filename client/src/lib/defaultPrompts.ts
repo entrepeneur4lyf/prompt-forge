@@ -67,7 +67,8 @@ export function resetToDefaultPrompts(): void {
 export function generateEnhancementPrompt(
   template: {
     domain: TemplateDomain;
-    agentType: AgentType;
+    agentEnhanced: boolean;
+    agentType: AgentType | null;
     modelType: ModelType;
     roleType: RoleType;
     methodologies: MethodologyType[];
@@ -75,17 +76,17 @@ export function generateEnhancementPrompt(
   customInstructions?: string
 ): string {
   const prompts = getCustomPrompts();
-  
+
   const parts = [
     prompts.domains[template.domain],
-    prompts.agents[template.agentType],
+    template.agentEnhanced && template.agentType ? prompts.agents[template.agentType] : null,
     prompts.models[template.modelType],
     prompts.roles[template.roleType],
     ...template.methodologies.map(m => prompts.methodologies[m])
-  ];
+  ].filter(Boolean);
 
   const basePrompt = parts.join('\n\n');
-  
+
   if (customInstructions) {
     return `${basePrompt}\n\nAdditional Instructions:\n${customInstructions}`;
   }
