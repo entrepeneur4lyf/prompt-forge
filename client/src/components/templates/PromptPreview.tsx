@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2 } from 'lucide-react';
+import { Copy, Wand2, Loader2 } from 'lucide-react';
 
 interface PromptPreviewProps {
   template: Template | null;
@@ -22,13 +22,15 @@ export default function PromptPreview({
 }: PromptPreviewProps) {
   const { toast } = useToast();
   const [enhancerEnabled, setEnhancerEnabled] = useState(false);
-  
+
   const enhanceMutation = useMutation({
     mutationFn: enhancePrompt,
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to enhance prompt. Check your API key in settings.',
+        description: error instanceof Error 
+          ? error.message 
+          : 'Failed to enhance prompt. Check your API key in settings.',
         variant: 'destructive',
       });
     },
@@ -68,7 +70,8 @@ export default function PromptPreview({
 
   const handleEnhance = async () => {
     if (enhancerEnabled) {
-      enhanceMutation.mutate(generatePrompt());
+      const prompt = generatePrompt();
+      enhanceMutation.mutate(prompt);
     }
   };
 
@@ -81,7 +84,12 @@ export default function PromptPreview({
           <span>Enhancer</span>
           <Switch
             checked={enhancerEnabled}
-            onCheckedChange={setEnhancerEnabled}
+            onCheckedChange={(checked) => {
+              setEnhancerEnabled(checked);
+              if (!checked) {
+                enhanceMutation.reset();
+              }
+            }}
           />
         </div>
       </div>
@@ -122,9 +130,13 @@ export default function PromptPreview({
           <Button
             className="flex-1"
             onClick={handleEnhance}
-            disabled={!enhancerEnabled}
+            disabled={!enhancerEnabled || enhanceMutation.isPending}
           >
-            <Wand2 className="mr-2 h-4 w-4" />
+            {enhanceMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="mr-2 h-4 w-4" />
+            )}
             Enhance
           </Button>
           <Button className="flex-1" onClick={copyToClipboard}>
