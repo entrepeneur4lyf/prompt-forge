@@ -38,16 +38,35 @@ export async function deleteTemplate(id: number): Promise<void> {
 
 export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   const apiKey = getApiKey();
-  if (!apiKey) throw new Error('Gemini API key not found');
+  console.log('API Key present:', !!apiKey, 'Length:', apiKey?.length || 0);
 
-  const res = await fetch(`${API_BASE}/enhance`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey
-    },
-    body: JSON.stringify({ prompt })
-  });
-  if (!res.ok) throw new Error('Failed to enhance prompt');
-  return res.json();
+  if (!apiKey) {
+    throw new Error('Gemini API key not found. Please add your API key in settings.');
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/enhance`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      },
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Enhancement request failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        errorText
+      });
+      throw new Error(`Enhancement failed: ${errorText}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error('Enhancement error:', error);
+    throw error;
+  }
 }

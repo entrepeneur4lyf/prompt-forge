@@ -9,7 +9,6 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/templates", async (_req, res) => {
     console.log("GET /api/templates - Starting request");
     try {
-      // Using Drizzle directly without manual client connection
       console.log("Executing Drizzle query to fetch templates...");
       const allTemplates = await db.select().from(templates);
       console.log("Query successful, found", allTemplates.length, "templates");
@@ -76,10 +75,13 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/enhance", async (req, res) => {
     try {
       const apiKey = req.headers["x-api-key"];
+      console.log("Enhance request received. API key present:", !!apiKey);
+
       if (!apiKey) {
         return res.status(401).json({ message: "API key is required" });
       }
 
+      console.log("Making request to Gemini API...");
       const response = await fetch(
         "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent",
         {
@@ -91,23 +93,33 @@ export function registerRoutes(app: Express): Server {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `Please rewrite and enhance the following prompt, make it more creative and engaging: ${req.body.prompt}`,
+                text: req.body.prompt,
               }],
             }],
           }),
         }
       );
 
+      console.log("Gemini API response status:", response.status);
+
       if (!response.ok) {
-        throw new Error("Failed to enhance prompt");
+        const errorText = await response.text();
+        console.error("Gemini API error:", errorText);
+        throw new Error(`Gemini API error: ${errorText}`);
       }
 
       const data = await response.json();
-      const enhancedPrompt = data.candidates[0].content.parts[0].text;
+      console.log("Gemini API response data:", JSON.stringify(data, null, 2));
 
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error("Unexpected response format from Gemini API");
+      }
+
+      const enhancedPrompt = data.candidates[0].content.parts[0].text;
       res.json({ enhancedPrompt });
     } catch (error) {
       console.error("Error enhancing prompt:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
       res.status(500).json({ 
         message: "Failed to enhance prompt",
         details: error instanceof Error ? error.message : String(error)
