@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,10 @@ import {
 } from '@/lib/defaultPrompts';
 import { 
   templateDomains, 
-  agentTypes, 
   modelTypes, 
   roleTypes, 
-  methodologyTypes 
+  methodologyTypes,
+  providerTypes 
 } from '@/lib/types';
 
 interface EnhancementPromptsDialogProps {
@@ -94,7 +94,7 @@ export default function EnhancementPromptsDialog({
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="domains">Domains</TabsTrigger>
-            <TabsTrigger value="agents">Agents</TabsTrigger>
+            <TabsTrigger value="providers">Providers</TabsTrigger>
             <TabsTrigger value="models">Models</TabsTrigger>
             <TabsTrigger value="roles">Roles</TabsTrigger>
             <TabsTrigger value="methodologies">Methodologies</TabsTrigger>
@@ -104,19 +104,19 @@ export default function EnhancementPromptsDialog({
             <TabsContent value="domains">
               {renderPromptFields('Domains', templateDomains, 'domains')}
             </TabsContent>
-            
-            <TabsContent value="agents">
-              {renderPromptFields('Agents', agentTypes, 'agents')}
+
+            <TabsContent value="providers">
+              {renderPromptFields('Providers', providerTypes, 'providers')}
             </TabsContent>
-            
+
             <TabsContent value="models">
               {renderPromptFields('Models', modelTypes, 'models')}
             </TabsContent>
-            
+
             <TabsContent value="roles">
               {renderPromptFields('Roles', roleTypes, 'roles')}
             </TabsContent>
-            
+
             <TabsContent value="methodologies">
               {renderPromptFields('Methodologies', methodologyTypes, 'methodologies')}
             </TabsContent>

@@ -82,10 +82,8 @@ export default function TemplatesPage() {
     setSelectedTemplate(null);
     setEditingTemplate({
       ...template,
-      agentType: template.agentType || null,
       methodologies: template.methodologies || [],
       isCore: template.isCore || false,
-      agentEnhanced: template.agentEnhanced || false
     });
   };
 
