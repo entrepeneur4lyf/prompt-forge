@@ -1,6 +1,7 @@
 export const templateDomains = ['Code', 'General', 'Marketing', 'Education', 'Creative Writing', 'Meta'] as const;
 export const agentTypes = ['Cursor', 'Replit', 'Claude', 'DeepSeek', 'Browser Agent'] as const;
 export const modelTypes = [
+  'Claude-Sonnet-3.5',
   'GPT-3.5-Turbo',
   'GPT-4',
   'GPT-4-Turbo',

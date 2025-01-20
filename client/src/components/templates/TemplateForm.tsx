@@ -26,7 +26,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       domain: template?.domain || 'Code',
       agentEnhanced: template?.agentEnhanced || false,
       agentType: template?.agentType || null,
-      modelType: template?.modelType || 'Gemini',
+      modelType: template?.modelType || 'Claude-Sonnet-3.5',
       roleType: template?.roleType || 'Developer',
       methodologies: template?.methodologies || [],
     },

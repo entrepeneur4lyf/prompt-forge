@@ -25,6 +25,7 @@ export const defaultPrompts: PromptConfig = {
     'Browser Agent': "Optimize the prompt for tasks that involve interacting with web pages."
   },
   models: {
+    'Claude-Sonnet-3.5': "Leverage Claude Sonnet 3.5's advanced capabilities in understanding context, creative writing, and complex reasoning with improved performance.",
     'GPT-3.5-Turbo': "Optimize for GPT-3.5 Turbo's strengths in general-purpose tasks while being mindful of its limitations.",
     'GPT-4': "Leverage GPT-4's advanced reasoning and deeper context understanding capabilities.",
     'GPT-4-Turbo': "Utilize GPT-4-Turbo's enhanced speed and up-to-date knowledge while maintaining high accuracy.",
@@ -34,8 +35,7 @@ export const defaultPrompts: PromptConfig = {
     'Replit-Code': "Optimize for Replit Code's specialized code generation and completion features.",
     'Replit-Chat': "Utilize Replit Chat's conversational abilities within the development context.",
     'Deepseek-Coder': "Leverage Deepseek Coder's specialized code understanding and generation capabilities.",
-    'Gemini-Pro': "Optimize for Gemini Pro's strong reasoning and problem-solving capabilities.",
-    'General': "Make the instructions clear and unambiguous."
+    'Gemini-Pro': "Optimize for Gemini Pro's strong reasoning and problem-solving capabilities."
   },
   roles: {
     'Architect': "Focus on high-level design, system architecture, and technical decision-making. Consider scalability, maintainability, and security.",
@@ -93,7 +93,7 @@ export function generateEnhancementPrompt(
     "",
     "Enhancement Instructions:",
     prompts.domains[template.domain],
-    template.agentEnhanced && template.agentType ? 
+    template.agentEnhanced && template.agentType ?
       `This prompt will be used with ${template.agentType}. ${prompts.agents[template.agentType]}` : null,
     prompts.models[template.modelType],
     prompts.roles[template.roleType],
