@@ -1,0 +1,194 @@
+You're absolutely right.  My apologies for the oversight. Removing the "Agent Enhanced" concept was a mistake, as it's crucial to distinguish between a general-purpose prompt and one specifically tailored for an agent, even if they use the same underlying model.
+
+Let's correct this by re-introducing the "Agent Enhanced" checkbox and refining how it works with the provider and model selections.
+
+Here's a revised plan and prompt for the Replit agent:
+
+**1. Re-Introduce "Agent Enhanced" Checkbox:**
+
+*   Add the "Agent Enhanced" checkbox back into the "Edit Template" section.
+
+**2. Refine "Agent Enhanced" Logic:**
+
+*   **If "Agent Enhanced" is checked:**
+    *   Display a new dropdown for "Agent Type" directly below the checkbox. This dropdown will list the available agents (e.g., "Cursor," "Replit," "Browser Agent").
+    *   The "Model" dropdown should display models appropriate for the selected agent if applicable, otherwise it should display all models.
+*   **If "Agent Enhanced" is unchecked:**
+    *   Hide the "Agent Type" dropdown.
+    *   The "Model" dropdown should display all available language models.
+
+**3. Update Enhancement Prompts:**
+
+*   Keep the `agents` section in `defaultPrompts` to store agent-specific enhancement instructions.
+*   When generating the enhancement prompt:
+    *   If "Agent Enhanced" is checked, include both the agent-specific instructions (from the `agents` section) and the model-specific instructions (from the `models` section).
+    *   If "Agent Enhanced" is unchecked, only include the model-specific instructions.
+
+**4. Update Template List Labels:**
+
+*   If a template is "Agent Enhanced," include an "Agent" tag/pill in the template list, along with the provider, model, and other relevant information.
+
+**Prompt for Replit Agent:**
+
+> "We need to re-introduce the 'Agent Enhanced' checkbox and refine how it interacts with the provider and model selections.
+>
+> 1.  **Re-add 'Agent Enhanced' Checkbox:** Add the 'Agent Enhanced' checkbox back into the 'Edit Template' section.
+> 2.  **Refine 'Agent Enhanced' Logic:**
+>     *   If 'Agent Enhanced' is checked:
+>         *   Display a new dropdown labeled 'Agent Type' directly below the checkbox. This dropdown should list the available agents (e.g., 'Cursor', 'Replit', 'Browser Agent').
+>         *   The 'Model' dropdown should display models appropriate for the selected agent if applicable, otherwise it should display all models.
+>     *   If 'Agent Enhanced' is unchecked:
+>         *   Hide the 'Agent Type' dropdown.
+>         *   The 'Model' dropdown should display all available language models.
+> 3.  **Update Enhancement Prompts:**
+>     *   Keep the `agents` section in `defaultPrompts` to store agent-specific enhancement instructions.
+>     *   Modify the `generateEnhancementPrompt` function:
+>         *   If 'Agent Enhanced' is checked, include both the agent-specific instructions (from the `agents` section) and the model-specific instructions (from the `models` section). Make sure to include a line in the prompt that states 'This prompt will be used with \[agent type].'
+>         *   If 'Agent Enhanced' is unchecked, only include the model-specific instructions.
+> 4.  **Update Template List Labels:**
+>     *   If a template is 'Agent Enhanced', include an 'Agent' tag/pill in the template list, along with the provider, model, and other relevant information. Also include the specific agent in this tag (e.g., 'Agent: Cursor').
+> 5.  **Update `Template` interface:**
+>     *   Add `agentType` and `agentEnhanced` fields back into the `Template` interface.
+>
+> Here's an example of how the template list labels might look:
+>
+> *   `[Code] [Agent] [Agent: Cursor] [OpenAI] [GPT-4-Turbo] [Developer] [TDD]`
+> *   `[General] [Anthropic] [Claude Sonnet]`
+>
+> These changes will allow us to create prompts that are tailored for specific agents and models, or for general-purpose use, while providing a clear visual representation of these settings in the UI."
+
+**Example `defaultPrompts`:**
+
+```typescript
+// ... other imports
+import { TemplateDomain, AgentType, ModelType, RoleType, MethodologyType, ProviderType } from './types';
+
+type PromptConfig = {
+  domains: Record<TemplateDomain, string>;
+  agents: Record<AgentType, string>;
+  models: Record<ModelType, string>;
+  roles: Record<RoleType, string>;
+  methodologies: Record<MethodologyType, string>;
+};
+
+export const defaultPrompts: PromptConfig = {
+  domains: {
+    'Code': "This prompt is related to code. Focus on improving the prompt's ability to elicit correct, efficient, and maintainable code from an AI. Consider aspects like code structure, best practices, and testability when refining the prompt.",
+    'General': "This prompt is for a general-purpose task. Improve the prompt's clarity, conciseness, and relevance to its intended context. Ensure the prompt is well-structured and effectively guides the AI towards the desired outcome.",
+    'Marketing': "This prompt is for marketing. Improve the prompt's ability to elicit persuasive, clear, and engaging marketing content from an AI. Tailor the prompt to the specific marketing channel and target audience.",
+    'Education': "This prompt is for education. Improve the prompt's ability to elicit clear, accurate, and pedagogically effective educational content from an AI. Tailor the prompt to the specific age group and knowledge level of the learners.",
+    'Creative Writing': "This prompt is for creative writing. Improve the prompt's ability to elicit original, vivid, and engaging creative writing from an AI. Focus on aspects like narrative structure, character development, and style.",
+    'Meta': "This prompt is a meta-prompt, designed to generate other prompts. Improve the clarity, structure, and effectiveness of this meta-prompt. Ensure it provides sufficient context and instructions to generate high-quality prompts for the intended purpose."
+  },
+  agents: {
+    'Cursor': "This prompt will be used with Cursor. Cursor is a code-focused agent used within an IDE. It has access to the entire codebase and excels at generating, refactoring, and explaining code.",
+    'Replit': "This prompt is for Replit. Replit is a code-focused agent within the Replit online environment. It excels at generating and completing code snippets, debugging, and assisting with project setup.",
+    'Claude': "This prompt is for Claude. Claude is a conversational AI. It excels at natural language understanding, dialogue, and providing informative responses.",
+    'DeepSeek': "This prompt is for DeepSeek. Deepseek is a code-focused AI. It excels at code understanding, generation, and complex reasoning.",
+    'Browser Agent': "This prompt is for a browser agent. It can interact with web pages by navigating, clicking elements, filling forms, extracting information, and performing actions based on web content."
+  },
+  models: {
+    'GPT-3.5 Turbo': "Leverage GPT-3.5 Turbo's strengths in general-purpose language understanding and generation.",
+    'GPT-4': "Leverage GPT-4's general-purpose language understanding and generation.",
+    'GPT-4-Turbo': "Leverage GPT-4-Turbo's strengths in general-purpose language understanding and generation, optimized for speed.",
+    'Claude Sonnet': "This prompt is for Claude Sonnet. It excels at nuanced language understanding, creative writing, and providing thoughtful responses.",
+    'Claude Haiku': "This prompt is for Claude Haiku. It excels at providing fast, concise answers and performing quick analyses.",
+    'Claude Opus': "This prompt is for Claude Opus. It excels at complex reasoning, in-depth analysis, and providing comprehensive answers.",
+    'Replit Code': "This prompt is for Replit Code, a code-focused agent within the Replit online environment. It excels at generating and completing code snippets, debugging, and assisting with project setup.",
+    'Replit Chat': "This prompt is for Replit Chat, a general purpose language model within the Replit online environment.",
+    'Deepseek Coder': "This prompt is for Deepseek Coder, a code-focused AI. It excels at code understanding, generation, and complex reasoning.",
+    'Gemini Pro': "This prompt is for Gemini Pro. Leverage Gemini's reasoning, problem-solving, and code generation."
+  },
+  roles: {
+    'Architect': "Focus on improving the prompt's effectiveness for eliciting high-level design, architecture, and technical decision-making guidance. Consider aspects like scalability, maintainability, and security.",
+    'Developer': "Focus on improving the prompt's effectiveness for eliciting implementation details, code structure, algorithms, and data structures. Emphasize code correctness and efficiency.",
+    'Tester': "Focus on improving the prompt's effectiveness for eliciting information related to identifying potential bugs, edge cases, and areas for improvement in code quality."
+  },
+  methodologies: {
+    'TDD': "Refine the prompt to elicit a focus on writing tests before implementing code. Encourage a unit-testing approach to drive development.",
+    'BDD': "Refine the prompt to elicit a focus on defining behavior from the user's perspective. Encourage the use of user stories and acceptance criteria.",
+    'Refactoring': "Refine the prompt to elicit a focus on improving code structure, readability, and maintainability without changing external behavior.",
+    'Code Review': "Refine the prompt to elicit constructive feedback on code quality, identification of potential bugs, and suggestions for improvement.",
+    'Atomic Design': "Refine the prompt to elicit a focus on breaking down the UI into small, reusable components.",
+    'SOLID Principles': "Refine the prompt to elicit adherence to SOLID principles of object-oriented design.",
+    'DRY': "Refine the prompt to elicit a focus on eliminating code duplication by identifying and abstracting common patterns."
+  }
+};
+
+export enum ProviderType {
+  OPENAI = 'OpenAI',
+  ANTHROPIC = 'Anthropic',
+  REPLIT = 'Replit',
+  DEEPSEEK = 'Deepseek',
+  BROWSER = 'Browser',
+  GEMINI = 'Gemini'
+}
+
+export enum ModelType {
+  GPT_3_5_TURBO = 'GPT 3.5 Turbo',
+  GPT_4 = 'GPT-4',
+  GPT_4_TURBO = 'GPT-4-Turbo',
+  CLAUDE_SONNET = 'Claude Sonnet',
+  CLAUDE_HAIKU = 'Claude Haiku',
+  CLAUDE_OPUS = 'Claude Opus',
+  REPLIT_CODE = 'Replit Code',
+  REPLIT_CHAT = 'Replit Chat',
+  DEEPSEEK_CODER = 'Deepseek Coder',
+  GEMINI_PRO = 'Gemini Pro'
+}
+
+export type AgentType = 'Cursor' | 'Replit' | 'Claude' | 'DeepSeek' | 'Browser Agent';
+
+export interface Template {
+  id: string;
+  name: string;
+  content: string;
+  domain: TemplateDomain;
+  modelType: ModelType;
+  providerType: ProviderType;
+  agentEnhanced: boolean;
+  agentType: AgentType | null;
+  roleType: RoleType;
+  methodologies: MethodologyType[];
+  isFavorite: boolean;
+}
+
+// ... rest of the code (generateEnhancementPrompt, etc.) ...
+```
+
+**Corrected `generateEnhancementPrompt` function:**
+
+```typescript
+export function generateEnhancementPrompt(
+  template: Template,
+  originalPrompt: string,
+  customInstructions?: string
+): string {
+  const prompts = getCustomPrompts();
+
+  const parts = [
+    "Please improve the following prompt. Aim for clarity, conciseness, and effectiveness. Ensure the revised prompt is well-structured and achieves its intended purpose.",
+    `Original Prompt: ${originalPrompt}`,
+    prompts.domains[template.domain],
+    template.agentEnhanced && template.agentType ? `This prompt will be used with ${template.agentType}. ${prompts.agents[template.agentType]}` : null,
+    prompts.models[template.modelType],
+    prompts.roles[template.roleType],
+    ...template.methodologies.map(m => prompts.methodologies[m])
+  ].filter(Boolean);
+
+  const basePrompt = parts.join(' ');
+
+  let finalPrompt = basePrompt;
+
+  if (customInstructions) {
+    finalPrompt += ` ${customInstructions}`;
+  }
+
+  // Add instruction to prevent commentary and formatting
+  finalPrompt += ' IMPORTANT: Return only the enhanced prompt. Exclude any headers, labels, formatting, or commentary.';
+
+  return finalPrompt;
+}
+```
+
+By making these adjustments, we'll have a system that correctly distinguishes between agent-specific and general-purpose prompts while retaining the flexibility to choose different models and enhancement options. The UI will also be clearer and more informative. Remember to test thoroughly after implementing these changes!

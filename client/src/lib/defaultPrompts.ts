@@ -21,7 +21,7 @@ export const defaultPrompts: PromptConfig = {
     'Cursor': "Optimize the prompt for code editing and generation within an IDE environment. Assume the agent has access to the entire codebase.",
     'Replit': "Optimize the prompt for code editing and generation within the Replit online environment.",
     'Claude': "Leverage Claude's strengths in conversational AI and natural language understanding.",
-    'DeepSeek': "Leverage DeepSeek's strengths in code understanding, generation, and complex reasoning.",
+    'DeepSeek': "Leverage DeepSeek's strengths in code understanding and complex reasoning.",
     'Browser Agent': "Optimize the prompt for tasks that involve interacting with web pages."
   },
   models: {
@@ -76,19 +76,18 @@ export function generateEnhancementPrompt(
   },
   customInstructions?: string
 ): string {
-  const prompts = getCustomPrompts();
+  const prompts = defaultPrompts;
 
   const parts = [
     prompts.domains[template.domain],
-    template.agentEnhanced && template.agentType ? prompts.agents[template.agentType] : null,
+    template.agentEnhanced && template.agentType ? 
+      `This prompt will be used with ${template.agentType}. ${prompts.agents[template.agentType]}` : null,
     prompts.models[template.modelType],
     prompts.roles[template.roleType],
     ...template.methodologies.map(m => prompts.methodologies[m])
   ].filter(Boolean);
 
-  const basePrompt = parts.join('\n\n');
-
-  let finalPrompt = basePrompt;
+  let finalPrompt = parts.join('\n\n');
 
   if (customInstructions) {
     finalPrompt += `\n\nAdditional Instructions:\n${customInstructions}`;
