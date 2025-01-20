@@ -11,7 +11,11 @@ export function registerRoutes(app: Express): Server {
       const allTemplates = await db.select().from(templates);
       res.json(allTemplates);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch templates" });
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch templates",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -23,7 +27,11 @@ export function registerRoutes(app: Express): Server {
         .returning();
       res.json(template);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create template" });
+      console.error("Error creating template:", error);
+      res.status(500).json({ 
+        message: "Failed to create template",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -36,7 +44,11 @@ export function registerRoutes(app: Express): Server {
         .returning();
       res.json(template);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update template" });
+      console.error("Error updating template:", error);
+      res.status(500).json({ 
+        message: "Failed to update template",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -47,7 +59,11 @@ export function registerRoutes(app: Express): Server {
         .where(eq(templates.id, parseInt(req.params.id)));
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete template" });
+      console.error("Error deleting template:", error);
+      res.status(500).json({ 
+        message: "Failed to delete template",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -86,7 +102,11 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ enhancedPrompt });
     } catch (error) {
-      res.status(500).json({ message: "Failed to enhance prompt" });
+      console.error("Error enhancing prompt:", error);
+      res.status(500).json({ 
+        message: "Failed to enhance prompt",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
