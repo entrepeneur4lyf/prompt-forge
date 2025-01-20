@@ -81,9 +81,11 @@ export default function TemplatesPage() {
     setSelectedTemplate(null);
     setEditingTemplate({
       ...template,
-      // Ensure all required fields are present
+      // Ensure all required fields are present with proper defaults
       agentType: template.agentType || null,
       methodologies: template.methodologies || [],
+      isCore: template.isCore || false,
+      agentEnhanced: template.agentEnhanced || false
     });
   };
 

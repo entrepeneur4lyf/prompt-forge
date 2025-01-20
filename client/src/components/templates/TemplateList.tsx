@@ -38,11 +38,11 @@ export default function TemplateList({
         'General': 'secondary',
         'Marketing': 'outline',
         'Education': 'destructive',
-        'Creative Writing': 'secondary'
+        'Creative Writing': 'secondary',
+        'Meta': 'outline'
       };
       return variants[value] || 'default';
     } else {
-      // Agent type badges use a different color scheme
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Replit': 'outline',
         'Cursor': 'secondary',
@@ -52,6 +52,18 @@ export default function TemplateList({
       };
       return variants[value] || 'default';
     }
+  };
+
+  const handleEditClick = (e: React.MouseEvent, template: Template) => {
+    e.stopPropagation();
+    if (typeof onEdit === 'function') {
+      onEdit(template);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    onDelete(id);
   };
 
   return (
@@ -100,10 +112,7 @@ export default function TemplateList({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(template);
-                      }}
+                      onClick={(e) => handleEditClick(e, template)}
                       title="Edit template"
                     >
                       <Pencil className="h-4 w-4 text-muted-foreground" />
@@ -111,10 +120,7 @@ export default function TemplateList({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(template.id);
-                      }}
+                      onClick={(e) => handleDeleteClick(e, template.id)}
                       title="Delete template"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
