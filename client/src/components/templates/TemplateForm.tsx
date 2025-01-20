@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface TemplateFormProps {
   template: Template | null;
   onSubmit: (template: CreateTemplateInput & { id?: number }) => void;
+  onCancel: () => void;  // Add this prop
 }
 
-export default function TemplateForm({ template, onSubmit }: TemplateFormProps) {
+export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
   const form = useForm<CreateTemplateInput>({
     defaultValues: {
       name: template?.name || '',
@@ -30,7 +31,7 @@ export default function TemplateForm({ template, onSubmit }: TemplateFormProps) 
   return (
     <Card className="p-4 mt-4">
       <h2 className="text-xl font-semibold mb-4">
-        {template ? 'Edit Template' : 'Create Template'}
+        {template?.id ? 'Edit Template' : 'Create Template'}
       </h2>
 
       <Form {...form}>
@@ -225,9 +226,14 @@ export default function TemplateForm({ template, onSubmit }: TemplateFormProps) 
             )}
           />
 
-          <Button type="submit" className="w-full">
-            {template ? 'Update Template' : 'Create Template'}
-          </Button>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {template?.id ? 'Update Template' : 'Create Template'}
+            </Button>
+          </div>
         </form>
       </Form>
     </Card>
