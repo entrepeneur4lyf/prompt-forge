@@ -114,8 +114,18 @@ export default function PromptPreview({
           <label className="text-sm font-medium mb-1 block">
             Generated Prompt
           </label>
-          <div className="bg-muted p-4 rounded-lg min-h-[100px] whitespace-pre-wrap">
-            {generatePrompt()}
+          <div className="relative bg-muted p-4 rounded-lg min-h-[100px]">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-8 w-8"
+              onClick={() => copyToClipboard(generatePrompt())}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <div className="whitespace-pre-wrap pt-8">
+              {generatePrompt()}
+            </div>
           </div>
         </div>
 
@@ -124,8 +134,18 @@ export default function PromptPreview({
             <label className="text-sm font-medium mb-1 block">
               Enhanced Prompt
             </label>
-            <div className="bg-muted p-4 rounded-lg min-h-[100px] whitespace-pre-wrap">
-              {enhanceMutation.data.enhancedPrompt}
+            <div className="relative bg-muted p-4 rounded-lg min-h-[100px]">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8"
+                onClick={() => copyToClipboard(enhanceMutation.data.enhancedPrompt)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <div className="whitespace-pre-wrap pt-8">
+                {enhanceMutation.data.enhancedPrompt}
+              </div>
             </div>
           </div>
         )}
@@ -142,9 +162,9 @@ export default function PromptPreview({
             />
           </div>
 
-          <div className="flex gap-2">
+          <div>
             <Button
-              className="flex-1"
+              className="w-full"
               onClick={handleEnhance}
               disabled={enhanceMutation.isPending}
             >
@@ -154,13 +174,6 @@ export default function PromptPreview({
                 <Wand2 className="mr-2 h-4 w-4" />
               )}
               Enhance
-            </Button>
-            <Button 
-              className="flex-1" 
-              onClick={() => copyToClipboard(enhanceMutation.data?.enhancedPrompt || generatePrompt())}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy
             </Button>
           </div>
         </div>
