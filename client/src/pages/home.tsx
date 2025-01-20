@@ -7,7 +7,7 @@ import TemplateForm from '@/components/templates/TemplateForm';
 import PromptPreview from '@/components/templates/PromptPreview';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
@@ -99,10 +99,23 @@ export default function Home() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Prompt Template Manager</h1>
-        <Button variant="outline" onClick={() => setShowSettings(true)}>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setEditingTemplate({} as Template)} 
+            data-testid="template-create-button"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Template
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowSettings(true)}
+            data-testid="settings-button"
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
