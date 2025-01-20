@@ -79,7 +79,7 @@ export default function TemplatesPage() {
 
   const handleEdit = (template: Template) => {
     setEditingTemplate(template);
-    setSelectedTemplate(null); // Clear the selected template when editing
+    setSelectedTemplate(null); 
   };
 
   const handleSubmit = async (template: Partial<Template>) => {
@@ -92,6 +92,10 @@ export default function TemplatesPage() {
 
   const handleCancel = () => {
     setEditingTemplate(null);
+  };
+
+  const handleSaveEnhanced = (enhanced: Template) => {
+    setEditingTemplate(enhanced);
   };
 
   if (templatesQuery.isLoading) {
@@ -137,6 +141,7 @@ export default function TemplatesPage() {
           template={selectedTemplate}
           dynamicFields={dynamicFields}
           onDynamicFieldsChange={setDynamicFields}
+          onSaveEnhanced={handleSaveEnhanced}
         />
       </div>
     </div>

@@ -1,0 +1,24 @@
+We need to modify the enhancement prompts to prevent the Gemini API from adding extra commentary or explanations to the enhanced prompt. The response should only contain the rewritten prompt itself.
+
+Add Instruction to Suppress Commentary: Add the following instruction (or a variation of it) to the end of all enhancement prompts: Do not include any commentary such as original prompt, or enhanced prompt, just return the enhanced prompt only. Experiment with different phrasing if needed to find what works best.
+Update Existing Prompts: Go through all existing enhancement prompts (for domains, agents, roles, methodologies) and add this new instruction to each of them.
+Modify Prompt Composition Logic: Ensure that the instruction to suppress commentary is always included at the end of the composed prompt that's sent to the Gemini API.
+Update Composed Enhancement Prompt Display: Update the composed enhancement prompt to display the instruction to suppress commentary.
+Update Enhancement Instructions: Update the enhancement instructions to include instructions for each option added to prevent extra commentary.
+By adding this instruction, we're explicitly telling the API to return only the enhanced prompt without any additional text."
+
+Example of a Modified Prompt (for the "Code" domain):
+
+Before:
+
+This prompt is for a code-related task. Focus on code correctness, efficiency, and best practices.
+
+After:
+
+This prompt is for a code-related task. Focus on code correctness, efficiency, and best practices. Do not include any commentary such as original prompt, or enhanced prompt, just return the enhanced prompt only.
+
+Important Considerations:
+
+Experimentation: It might take some experimentation to find the phrasing that works consistently well with the Gemini API.
+Model Updates: Keep in mind that API models can change, so you might need to adjust the instructions in the future.
+By implementing these changes, you should be able to eliminate the unwanted commentary and get clean, usable enhanced prompts from the Gemini API.
