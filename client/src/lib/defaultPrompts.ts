@@ -10,37 +10,37 @@ type PromptConfig = {
 
 export const defaultPrompts: PromptConfig = {
   domains: {
-    'Code': "This prompt is for a code-related task. Focus on code correctness, efficiency, and best practices.",
-    'General': "This prompt is for a general-purpose task. Focus on clarity, conciseness, and relevance to the given context.",
-    'Marketing': "This prompt is for a marketing-related task. Focus on persuasiveness, clarity, and engagement. Tailor the message to the target audience and the specific marketing channel.",
-    'Education': "This prompt is for an educational context. Focus on clarity, accuracy, and pedagogical effectiveness. Consider the age and knowledge level of the learners.",
-    'Creative Writing': "This prompt is for creative writing. Focus on originality, vivid language, and engaging storytelling."
+    'Code': "Focus on code correctness, efficiency, and best practices.",
+    'General': "Focus on clarity, conciseness, and relevance to the given context.",
+    'Marketing': "Focus on persuasiveness, clarity, and engagement. Tailor the message to the target audience and the specific marketing channel.",
+    'Education': "Focus on clarity, accuracy, and pedagogical effectiveness. Consider the age and knowledge level of the learners.",
+    'Creative Writing': "Focus on originality, vivid language, and engaging storytelling."
   },
   agents: {
-    'Cursor': "This prompt will be used with Cursor. Optimize the prompt for code editing and generation within an IDE environment. Assume the agent has access to the entire codebase.",
-    'Replit': "This prompt will be used with Replit. Optimize the prompt for code editing and generation within the Replit online environment.",
-    'Claude': "This prompt will be used with Claude. Leverage Claude's strengths in conversational AI and natural language understanding.",
-    'DeepSeek': "This prompt will be used with DeepSeek. Leverage DeepSeek's strengths in code understanding, generation, and complex reasoning.",
-    'Browser Agent': "This prompt will be used with a browser agent. Optimize the prompt for tasks that involve interacting with web pages."
+    'Cursor': "Optimize the prompt for code editing and generation within an IDE environment. Assume the agent has access to the entire codebase.",
+    'Replit': "Optimize the prompt for code editing and generation within the Replit online environment.",
+    'Claude': "Leverage Claude's strengths in conversational AI and natural language understanding.",
+    'DeepSeek': "Leverage DeepSeek's strengths in code understanding, generation, and complex reasoning.",
+    'Browser Agent': "Optimize the prompt for tasks that involve interacting with web pages."
   },
   models: {
-    'GPT-4': "This prompt will be used with GPT-4. Leverage GPT-4's strengths in general-purpose language understanding and generation.",
-    'Gemini': "This prompt will be used with Gemini. Leverage Gemini's strengths in reasoning, problem-solving, and code generation.",
-    'General': "This prompt will be used with a general-purpose language model. Make the instructions clear and unambiguous."
+    'GPT-4': "Leverage GPT-4's strengths in general-purpose language understanding and generation.",
+    'Gemini': "Leverage Gemini's strengths in reasoning, problem-solving, and code generation.",
+    'General': "Make the instructions clear and unambiguous."
   },
   roles: {
-    'Architect': "This prompt is for a software architect. Focus on high-level design, system architecture, and technical decision-making. Consider scalability, maintainability, and security.",
-    'Developer': "This prompt is for a software developer. Focus on implementation details, code structure, algorithms, and data structures. Emphasize code correctness and efficiency.",
-    'Tester': "This prompt is for a software tester. Focus on identifying potential bugs, edge cases, and areas for improvement in code quality."
+    'Architect': "Focus on high-level design, system architecture, and technical decision-making. Consider scalability, maintainability, and security.",
+    'Developer': "Focus on implementation details, code structure, algorithms, and data structures. Emphasize code correctness and efficiency.",
+    'Tester': "Focus on identifying potential bugs, edge cases, and areas for improvement in code quality."
   },
   methodologies: {
-    'TDD': "Emphasize the importance of writing tests before implementing code. Encourage the use of unit tests to drive development.",
-    'BDD': "Focus on defining behavior from the user's perspective. Use user stories and acceptance criteria to guide development.",
+    'TDD': "Emphasize writing tests before implementing code. Encourage unit tests to drive development.",
+    'BDD': "Focus on defining behavior from the user's perspective. Use user stories and acceptance criteria.",
     'Refactoring': "Focus on improving code structure, readability, and maintainability without changing external behavior.",
-    'Code Review': "Focus on providing constructive feedback on code quality, identifying potential bugs, and suggesting improvements.",
-    'Atomic Design': "Focus on breaking down the UI into small, reusable components (atoms, molecules, organisms, templates, pages).",
-    'SOLID Principles': "Adhere to the SOLID principles: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion.",
-    'DRY': "Eliminate code duplication by identifying and abstracting common patterns into reusable components or functions."
+    'Code Review': "Focus on providing constructive feedback on code quality and identifying potential bugs.",
+    'Atomic Design': "Focus on breaking down the UI into small, reusable components.",
+    'SOLID Principles': "Follow Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion principles.",
+    'DRY': "Eliminate code duplication by identifying and abstracting common patterns into reusable components."
   }
 };
 
@@ -87,9 +87,14 @@ export function generateEnhancementPrompt(
 
   const basePrompt = parts.join('\n\n');
 
+  let finalPrompt = basePrompt;
+
   if (customInstructions) {
-    return `${basePrompt}\n\nAdditional Instructions:\n${customInstructions}`;
+    finalPrompt += `\n\nAdditional Instructions:\n${customInstructions}`;
   }
 
-  return basePrompt;
+  // Add instruction to prevent commentary and formatting
+  finalPrompt += '\n\nIMPORTANT: Return only the enhanced prompt without any headers, sections, formatting markers, or additional commentary. Do not include phrases like "Enhanced Prompt" or explanatory notes.';
+
+  return finalPrompt;
 }
