@@ -81,24 +81,29 @@ export function registerRoutes(app: Express): Server {
         return res.status(401).json({ message: "API key is required" });
       }
 
+      const url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent");
+      url.searchParams.append("key", apiKey.toString());
+
       console.log("Making request to Gemini API...");
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: req.body.prompt,
-              }],
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: req.body.prompt,
             }],
-          }),
-        }
-      );
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+        }),
+      });
 
       console.log("Gemini API response status:", response.status);
 
