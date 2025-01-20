@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Template, CreateTemplateInput, templateDomains, modelTypes, roleTypes, methodologyTypes, providerTypes, ModelType, ProviderType } from '@/lib/types';
+import { Template, templateDomains, modelTypes, roleTypes, methodologyTypes, providerTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface TemplateFormProps {
   template: Template | null;
-  onSubmit: (template: CreateTemplateInput & { id?: number }) => void;
+  onSubmit: (template: Partial<Template>) => void;
   onCancel: () => void;
 }
 
@@ -31,24 +30,6 @@ const templateFormSchema = z.object({
 
 type FormData = z.infer<typeof templateFormSchema>;
 
-// Get available models for a specific provider
-const getModelsForProvider = (provider: ProviderType): ModelType[] => {
-  switch (provider) {
-    case 'OpenAI':
-      return ['GPT-3.5-Turbo', 'GPT-4', 'GPT-4-Turbo'];
-    case 'Anthropic':
-      return ['Claude-Sonnet-3.5', 'Claude-Sonnet', 'Claude-Haiku', 'Claude-Opus'];
-    case 'Replit':
-      return ['Replit-Code', 'Replit-Chat'];
-    case 'Deepseek':
-      return ['Deepseek-Coder'];
-    case 'Gemini':
-      return ['Gemini-Pro'];
-    default:
-      return [];
-  }
-};
-
 export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(templateFormSchema),
@@ -63,9 +44,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       methodologies: template?.methodologies || [],
     },
   });
-
-  const selectedProvider = form.watch('providerType') as ProviderType;
-  const availableModels = getModelsForProvider(selectedProvider);
 
   useEffect(() => {
     if (template) {
@@ -82,15 +60,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
     }
   }, [template, form]);
 
-  useEffect(() => {
-    const currentModel = form.getValues('modelType');
-    if (!availableModels.includes(currentModel)) {
-      form.setValue('modelType', availableModels[0]);
-    }
-  }, [selectedProvider, availableModels, form]);
-
   const handleSubmit = (data: FormData) => {
-    onSubmit(template?.id ? { ...data, id: template.id } : data);
+    onSubmit(data);
   };
 
   return (
@@ -190,18 +161,14 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Model</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={!selectedProvider}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select model" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableModels.map((model) => (
+                      {modelTypes.map((model) => (
                         <SelectItem key={model} value={model}>
                           {model}
                         </SelectItem>
@@ -217,26 +184,22 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               control={form.control}
               name="roleType"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem>
                   <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="grid grid-cols-2 gap-4"
-                    >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
                       {roleTypes.map((role) => (
-                        <FormItem key={role} className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value={role} />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {role}
-                          </FormLabel>
-                        </FormItem>
+                        <SelectItem key={role} value={role}>
+                          {role}
+                        </SelectItem>
                       ))}
-                    </RadioGroup>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
