@@ -16,7 +16,7 @@ export default function TemplatesPage() {
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [dynamicFields, setDynamicFields] = useState<Array<{ name: string; value: string }>>([]);
 
-  const templatesQuery = useQuery({
+  const templatesQuery = useQuery<Template[]>({
     queryKey: ['/api/templates'],
   });
 
@@ -79,6 +79,7 @@ export default function TemplatesPage() {
 
   const handleEdit = (template: Template) => {
     setEditingTemplate(template);
+    setSelectedTemplate(null); // Clear the selected template when editing
   };
 
   const handleSubmit = async (template: Partial<Template>) => {
@@ -92,6 +93,14 @@ export default function TemplatesPage() {
   const handleCancel = () => {
     setEditingTemplate(null);
   };
+
+  if (templatesQuery.isLoading) {
+    return <div>Loading templates...</div>;
+  }
+
+  if (templatesQuery.isError) {
+    return <div>Error loading templates</div>;
+  }
 
   return (
     <div className="container mx-auto py-6">
