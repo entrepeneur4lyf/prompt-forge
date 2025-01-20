@@ -82,12 +82,12 @@ export default function PromptPreview({
     <Card className="p-4">
       <h2 className="text-xl font-semibold mb-4">Preview</h2>
 
-      <div className="space-y-4 mb-4">
+      <div className="space-y-6 mb-8">
         {placeholders.map((placeholder) => {
           const field = dynamicFields.find((f) => f.name === placeholder);
           return (
             <div key={placeholder}>
-              <label className="text-sm font-medium mb-1 block">
+              <label className="text-sm font-medium mb-2 block">
                 {placeholder}
               </label>
               <Input
@@ -103,18 +103,19 @@ export default function PromptPreview({
                   onDynamicFieldsChange(newFields);
                 }}
                 placeholder={`Enter value for ${placeholder}`}
+                className="w-full"
               />
             </div>
           );
         })}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label className="text-sm font-medium mb-1 block">
+          <label className="text-sm font-medium mb-2 block">
             Generated Prompt
           </label>
-          <div className="relative bg-muted p-4 rounded-lg min-h-[100px]">
+          <div className="relative bg-muted p-4 rounded-lg min-h-[120px]">
             <Button
               variant="ghost"
               size="icon"
@@ -131,10 +132,10 @@ export default function PromptPreview({
 
         {enhanceMutation.data && (
           <div>
-            <label className="text-sm font-medium mb-1 block">
+            <label className="text-sm font-semibold mb-2 block">
               Enhanced Prompt
             </label>
-            <div className="relative bg-muted p-4 rounded-lg min-h-[100px]">
+            <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg min-h-[150px]">
               <Button
                 variant="ghost"
                 size="icon"
@@ -150,32 +151,31 @@ export default function PromptPreview({
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1 block">
+            <label className="text-sm font-medium mb-2 block">
               Enhancement Instructions (Optional)
             </label>
             <Input
               value={enhancementInstructions}
               onChange={(e) => setEnhancementInstructions(e.target.value)}
               placeholder="Add specific instructions for enhancement"
+              className="w-full"
             />
           </div>
 
-          <div>
-            <Button
-              className="w-full"
-              onClick={handleEnhance}
-              disabled={enhanceMutation.isPending}
-            >
-              {enhanceMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="mr-2 h-4 w-4" />
-              )}
-              Enhance
-            </Button>
-          </div>
+          <Button
+            className="w-full"
+            onClick={handleEnhance}
+            disabled={enhanceMutation.isPending}
+          >
+            {enhanceMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="mr-2 h-4 w-4" />
+            )}
+            Enhance
+          </Button>
         </div>
       </div>
     </Card>
