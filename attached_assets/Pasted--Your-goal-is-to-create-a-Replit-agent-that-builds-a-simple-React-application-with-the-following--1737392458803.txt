@@ -1,0 +1,63 @@
+```
+Your goal is to create a Replit agent that builds a simple React application with the following features and behavior. You will need to set up a database (recommend using a simple JSON file database for this Replit, but specify it should be easily migratable to a more robust solution like MongoDB, or Postgresql), manage API keys in local storage, and interact with the Gemini API.
+
+**Application Functionality:**
+
+1.  **Prompt Template Storage:**
+    *   The application should allow users to create, store, and retrieve prompt templates in a database.
+    *   Each prompt template should have a unique identifier, a name, and the template text itself.
+
+2.  **Core Prompts:**
+    *   Users should be able to define a set of "core prompts" which are frequently used or foundational templates.
+    *   These should be easily accessible within the UI.
+
+3.  **Dynamic Data Integration:**
+    *   The UI should provide a way for users to define dynamic data fields (e.g., through input boxes).
+    *   Users should then be able to insert these dynamic data fields into the prompt templates using a placeholder system (e.g., `{{dynamicField1}}`, `{{dynamicField2}}`).
+
+4.  **Prompt Generation and Copying:**
+    *   When a user selects a prompt template and fills in the dynamic data, the application should generate the final prompt by replacing the placeholders with the provided values.
+    *   The generated prompt should be easily copyable to the user's clipboard.
+
+5.  **Prompt Enhancer (Optional):**
+    *   Include a toggleable feature called "Prompt Enhancer."
+    *   When enabled, the generated prompt (including dynamic data) should be sent to the Gemini API with the following instruction: "Please rewrite and enhance the following prompt, make it more creative and engaging: \[Generated Prompt]".
+    *   The enhanced prompt returned by Gemini should then be displayed to the user and made copyable.
+
+6. **Settings Panel:**
+   * The UI should have a settings panel that will allow the user to enter their Gemini API key.
+   * This API key should be stored in local storage, and there should be an option to clear the key from storage.
+
+**Technical Requirements:**
+
+*   **Frontend:** React
+*   **Backend (for Replit):** Node.js with a simple file-based database, but design the data access layer in a way that it's easily replaceable with MongoDB or PostgreSQL if needed.
+*   **API Interaction:** Use the Gemini API to enhance prompts when the "Prompt Enhancer" is enabled.
+*   **Local Storage:** Store the user's Gemini API key in the browser's local storage.
+
+**Replit Agent Instructions:**
+
+1.  Create a new React application using `create-react-app`.
+2.  Set up a basic UI with components for:
+    *   Managing prompt templates (add, edit, delete, list).
+    *   Selecting a core prompt or template.
+    *   Entering dynamic data.
+    *   Displaying and copying the generated prompt.
+    *   Enabling/disabling the "Prompt Enhancer."
+    *   A settings panel for the Gemini API Key
+3.  Implement the backend logic (in a separate Node.js file) to handle:
+    *   Storing and retrieving prompt templates from a JSON file (database).
+    *   Replacing dynamic data placeholders in the templates.
+    *   Interacting with the Gemini API using the user's provided key.
+    *   Make sure the database layer is abstracted enough to be easily switched to MongoDB or PostgreSQL in the future.
+4.  Integrate the frontend and backend, ensuring that API calls are made correctly and data is displayed appropriately.
+5.  Implement error handling for API calls and database operations.
+6.  Test the application thoroughly, ensuring all features work as expected, including local storage persistence of the API key.
+7. If possible, suggest optimizations for the initial implementation, and if time permits, implement them.
+
+**Deliverables:**
+
+*   A fully functional Replit project containing the React application code.
+*   A well-structured and commented codebase.
+*   Ensure the application meets all the specified requirements.
+```
