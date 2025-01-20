@@ -1,0 +1,89 @@
+Okay, let's outline the improvements for the Replit agent to implement: displaying the model in a pill, using radio buttons for roles with a default of "None," and adding form validation rules.
+
+**1. Display Model in a Pill:**
+
+*   **What to do:**  Add another pill next to the agent type pill in the template list that displays the selected model for each template.
+*   **How:** Modify the code that renders the template list items to include a new pill that extracts the `modelType` from the template data and displays it.
+
+**Prompt for Replit Agent:**
+
+> "We need to display the selected model in a separate pill next to the agent type pill in the template list. Please modify the `TemplateList` component so that it renders a new pill that displays the `modelType` of each template. Make sure this pill is visually similar to the existing agent type pill and is placed next to it."
+
+**2. Radio Buttons for Role and Default to "None":**
+
+*   **What to do:** Change the role selection from a dropdown to radio buttons. Add a "None" option that is selected by default.
+*   **How:**
+    *   Replace the role dropdown element with a set of radio buttons.
+    *   Each radio button should represent a role (e.g., "Architect," "Developer," "Tester").
+    *   Add a radio button labeled "None" and make it the default selected option.
+    *   Update the state management to handle the radio button selection.
+
+**Prompt for Replit Agent:**
+
+> "Let's change the role selection to use radio buttons instead of a dropdown. Please do the following:
+>
+> 1.  Replace the role dropdown in the 'Edit Template' section with a set of radio buttons.
+> 2.  Create radio buttons for each role: 'Architect', 'Developer', 'Tester', and add a 'None' option.
+> 3.  Make the 'None' option the default selected role.
+> 4.  Ensure that the selected role is correctly stored in the template data and used in the prompt enhancement logic.
+> 5.  Update the form validation to reflect this change, if the 'None' option is selected for 'Role', then no role should be added to the enhancement prompt."
+
+**3. Form Validation Rules:**
+
+*   **What to do:** Implement form validation to ensure data integrity and provide a better user experience.
+*   **How:**
+    *   **Required Fields:**  Mark required fields (e.g., "Name," "Content") visually and prevent form submission if they are empty.
+    *   **Data Type Validation:** Validate that the data entered into each field is of the correct type (e.g., the model is selected if a provider is selected).
+    *   **Error Messages:** Display clear and helpful error messages next to invalid fields.
+
+**Prompt for Replit Agent:**
+
+> "We need to add form validation to the 'Edit Template' section. Please implement the following:
+>
+> 1.  **Required Fields:**
+>     *   Make the 'Name' and 'Content' fields required.
+>     *   Visually indicate that these fields are required (e.g., with an asterisk).
+>     *   Prevent the 'Update Template' button from being clicked if these fields are empty.
+>     *   Display an error message next to each required field that is left empty (e.g., 'Name is required.').
+> 2.  **Data Type Validation:**
+>     *   If a 'Provider' is selected, make sure that a 'Model' is also selected.
+>     *   Display an error message if the selected 'Model' is not valid for the selected 'Provider'.
+>     *   If 'Agent Enhanced' is checked, make sure an 'Agent Type' is selected.
+>     *   Display an error message if 'Agent Enhanced' is checked but no 'Agent Type' is selected.
+> 3.  **Error Message Display:**
+>     *   Display error messages clearly and concisely next to the invalid fields.
+>     *   Consider using a consistent style for error messages (e.g., red text).
+>
+> Use HTML5 form validation attributes where possible (e.g., `required`) and add custom JavaScript validation logic as needed. Ensure that the validation is performed both on form submission and, ideally, as the user types (on change)."
+
+**Example Validation Logic (Illustrative):**
+
+```javascript
+// In the onEdit function, before saving the template:
+
+if (!template.name) {
+  // Display error: "Name is required."
+  return;
+}
+
+if (!template.content) {
+  // Display error: "Content is required."
+  return;
+}
+
+if (template.providerType && !template.modelType) {
+  // Display error: "Please select a model."
+  return;
+}
+
+// ... etc.
+```
+
+**General Tips for the Replit Agent:**
+
+*   **Break Down Tasks:**  If a task seems too complex, break it down into smaller, more manageable subtasks.
+*   **Ask for Clarification:** Don't hesitate to ask for clarification if any instructions are unclear.
+*   **Test Thoroughly:** After implementing each change, test it thoroughly to ensure it works as expected and doesn't introduce new issues.
+*   **Use `console.log`:** Use `console.log` statements liberally to inspect values and debug the code.
+
+By implementing these improvements, you'll make the Prompt Template Manager more user-friendly, robust, and visually informative.

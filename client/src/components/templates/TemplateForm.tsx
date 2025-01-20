@@ -1,13 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { Template, CreateTemplateInput, templateDomains, agentTypes, modelTypes, roleTypes, methodologyTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect } from 'react';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface TemplateFormProps {
   template: Template | null;
@@ -15,10 +18,33 @@ interface TemplateFormProps {
   onCancel: () => void;
 }
 
+const templateFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  content: z.string().min(1, "Content is required"),
+  isCore: z.boolean(),
+  domain: z.enum(templateDomains),
+  agentEnhanced: z.boolean(),
+  agentType: z.enum(agentTypes).nullable(),
+  modelType: z.enum(modelTypes),
+  roleType: z.enum([...roleTypes, 'None'] as const),
+  methodologies: z.array(z.enum(methodologyTypes))
+}).refine((data) => {
+  if (data.agentEnhanced && !data.agentType) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Agent type must be selected when agent enhancement is enabled",
+  path: ["agentType"]
+});
+
+type FormData = z.infer<typeof templateFormSchema>;
+
 export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
   console.log('Template Form received template:', template); // Debug log
 
-  const form = useForm<CreateTemplateInput>({
+  const form = useForm<FormData>({
+    resolver: zodResolver(templateFormSchema),
     defaultValues: {
       name: template?.name || '',
       content: template?.content || '',
@@ -27,7 +53,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       agentEnhanced: template?.agentEnhanced || false,
       agentType: template?.agentType || null,
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
-      roleType: template?.roleType || 'Developer',
+      roleType: template?.roleType || 'None',
       methodologies: template?.methodologies || [],
     },
   });
@@ -52,7 +78,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
 
   const agentEnhanced = form.watch('agentEnhanced');
 
-  const handleSubmit = (data: CreateTemplateInput) => {
+  const handleSubmit = (data: FormData) => {
     console.log('Form submitting data:', data); // Debug log
     onSubmit(template?.id ? { ...data, id: template.id } : data);
   };
@@ -74,6 +100,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 <FormControl>
                   <Input {...field} placeholder="Enter template name" />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -91,6 +118,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                     className="min-h-[100px]"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -116,6 +144,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -139,6 +168,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       Enable agent-specific prompt enhancement
                     </FormDescription>
                   </div>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -167,6 +197,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -192,6 +223,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -200,22 +232,35 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               control={form.control}
               name="roleType"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-3">
                   <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roleTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="None" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          None
+                        </FormLabel>
+                      </FormItem>
+                      {roleTypes.map((role) => (
+                        <FormItem key={role} className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={role} />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {role}
+                          </FormLabel>
+                        </FormItem>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -260,6 +305,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                     />
                   ))}
                 </div>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -279,6 +325,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 <FormDescription>
                   Mark this as a frequently used template
                 </FormDescription>
+                <FormMessage />
               </FormItem>
             )}
           />

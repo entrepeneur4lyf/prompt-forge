@@ -1,4 +1,4 @@
-import { Template, templateDomains } from '@/lib/types';
+import { Template, templateDomains, agentTypes, modelTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,7 +31,7 @@ export default function TemplateList({
     return templates.filter(template => template.domain === selectedDomain);
   }, [templates, selectedDomain]);
 
-  const getBadgeVariant = (type: 'domain' | 'agent', value: string) => {
+  const getBadgeVariant = (type: 'domain' | 'agent' | 'model', value: string) => {
     if (type === 'domain') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Code': 'default',
@@ -42,7 +42,7 @@ export default function TemplateList({
         'Meta': 'outline'
       };
       return variants[value] || 'default';
-    } else {
+    } else if (type === 'agent') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Replit': 'outline',
         'Cursor': 'secondary',
@@ -51,6 +51,15 @@ export default function TemplateList({
         'Browser Agent': 'secondary'
       };
       return variants[value] || 'default';
+    } else {
+      // Model type variants
+      const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+        'Claude-Sonnet-3.5': 'default',
+        'GPT-4': 'secondary',
+        'GPT-4-Turbo': 'outline',
+        'Gemini-Pro': 'destructive'
+      };
+      return variants[value] || 'secondary';
     }
   };
 
@@ -127,13 +136,18 @@ export default function TemplateList({
                     </Button>
                   </div>
                 </div>
-                <div className="mt-2 flex gap-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <Badge variant={getBadgeVariant('domain', template.domain)}>
                     {template.domain}
                   </Badge>
                   {template.agentEnhanced && template.agentType && (
                     <Badge variant={getBadgeVariant('agent', template.agentType)}>
                       {template.agentType}
+                    </Badge>
+                  )}
+                  {template.modelType && ( // Added condition to prevent errors if modelType is undefined
+                    <Badge variant={getBadgeVariant('model', template.modelType)}>
+                      {template.modelType}
                     </Badge>
                   )}
                 </div>
