@@ -93,7 +93,7 @@ export default function PromptPreview({
         </Button>
       </div>
 
-      <div className="space-y-6 mb-8">
+      <div className="space-y-6">
         {placeholders.map((placeholder) => {
           const field = dynamicFields.find((f) => f.name === placeholder);
           return (
@@ -121,7 +121,37 @@ export default function PromptPreview({
         })}
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 mt-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-lg font-semibold">Enhancement Prompt</h3>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-6 px-2">
+                  ?
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-sm">
+                  This is the instruction prompt that will be used to enhance your template.
+                  You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
+                </p>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+          <Textarea
+            value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
+            onChange={(e) => setComposedPrompt(e.target.value)}
+            className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
+          />
+          <Input
+            value={enhancementInstructions}
+            onChange={(e) => setEnhancementInstructions(e.target.value)}
+            placeholder="Add specific instructions for enhancement (optional)"
+            className="w-full mt-2"
+          />
+        </div>
+
         <div>
           <label className="text-sm font-medium mb-2 block">
             Generated Prompt
@@ -162,53 +192,18 @@ export default function PromptPreview({
           </div>
         )}
 
-        <div className="space-y-4">
-          <div>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <label className="text-sm font-medium mb-2 block cursor-help">
-                  Composed Enhancement Prompt
-                </label>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <p className="text-sm">
-                  This is the full prompt that will be used to enhance your generated prompt.
-                  You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
-                </p>
-              </HoverCardContent>
-            </HoverCard>
-            <Textarea
-              value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
-              onChange={(e) => setComposedPrompt(e.target.value)}
-              className="min-h-[150px] font-mono text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Additional Enhancement Instructions (Optional)
-            </label>
-            <Input
-              value={enhancementInstructions}
-              onChange={(e) => setEnhancementInstructions(e.target.value)}
-              placeholder="Add specific instructions for enhancement"
-              className="w-full"
-            />
-          </div>
-
-          <Button
-            className="w-full"
-            onClick={handleEnhance}
-            disabled={enhanceMutation.isPending}
-          >
-            {enhanceMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Wand2 className="mr-2 h-4 w-4" />
-            )}
-            Enhance
-          </Button>
-        </div>
+        <Button
+          className="w-full"
+          onClick={handleEnhance}
+          disabled={enhanceMutation.isPending}
+        >
+          {enhanceMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Wand2 className="mr-2 h-4 w-4" />
+          )}
+          Enhance
+        </Button>
       </div>
 
       <EnhancementPromptsDialog 
