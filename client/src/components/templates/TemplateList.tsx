@@ -76,10 +76,10 @@ export default function TemplateList({
   };
 
   return (
-    <Card className="p-4">
-      <div className="space-y-4">
+    <Card className="p-6">
+      <div className="space-y-5">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Templates</h2>
+          <h2 className="text-2xl font-bold text-foreground">Templates</h2>
           <Select 
             value={selectedDomain} 
             onValueChange={setSelectedDomain}
@@ -98,26 +98,26 @@ export default function TemplateList({
           </Select>
         </div>
 
-        <ScrollArea className="h-[400px]">
-          <div className="space-y-2">
+        <ScrollArea className="h-[500px] pr-4">
+          <div className="space-y-4">
             {filteredTemplates.map((template) => (
               <div
                 key={template.id}
-                className={`p-3 rounded-lg cursor-pointer border transition-colors ${
+                className={`p-4 rounded-lg cursor-pointer border transition-colors ${
                   selectedTemplate?.id === template.id
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
                 onClick={() => onSelect(template)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
                     {template.isCore && (
-                      <Star className="h-4 w-4 text-yellow-500" />
+                      <Star className="h-5 w-5 flex-shrink-0 text-yellow-500" />
                     )}
-                    <span className="font-medium">{template.name}</span>
+                    <span className="font-semibold text-lg">{template.name}</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -136,7 +136,7 @@ export default function TemplateList({
                     </Button>
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant={getBadgeVariant('domain', template.domain)}>
                     {template.domain}
                   </Badge>
@@ -145,7 +145,7 @@ export default function TemplateList({
                       {template.agentType}
                     </Badge>
                   )}
-                  {template.modelType && ( // Added condition to prevent errors if modelType is undefined
+                  {template.modelType && (
                     <Badge variant={getBadgeVariant('model', template.modelType)}>
                       {template.modelType}
                     </Badge>

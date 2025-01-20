@@ -47,10 +47,8 @@ export default function TemplatesPage() {
         title: 'Success',
         description: 'Template updated successfully',
       });
-      // Update both editing and selected states
       setEditingTemplate(null);
       setSelectedTemplate(updatedTemplate);
-      console.log('Template updated, new state:', updatedTemplate); // Debug log
     },
     onError: (error) => {
       toast({
@@ -81,11 +79,9 @@ export default function TemplatesPage() {
   });
 
   const handleEdit = (template: Template) => {
-    console.log('Editing template:', template); // Debug log
     setSelectedTemplate(null);
     setEditingTemplate({
       ...template,
-      // Ensure all required fields are present with proper defaults
       agentType: template.agentType || null,
       methodologies: template.methodologies || [],
       isCore: template.isCore || false,
@@ -94,7 +90,6 @@ export default function TemplatesPage() {
   };
 
   const handleSubmit = async (template: Partial<Template>) => {
-    console.log('Submitting template:', template); // Debug log
     if (editingTemplate?.id) {
       updateMutation.mutate({ ...template, id: editingTemplate.id } as Template);
     } else {
@@ -107,7 +102,6 @@ export default function TemplatesPage() {
   };
 
   const handleSaveEnhanced = (enhanced: Template) => {
-    console.log('Saving enhanced template:', enhanced); // Debug log
     setEditingTemplate(enhanced);
   };
 
@@ -120,14 +114,14 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="container mx-auto py-8 px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Prompt Templates</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Prompt Templates</h1>
             {!editingTemplate && (
-              <Button onClick={() => setEditingTemplate({} as Template)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
+              <Button onClick={() => setEditingTemplate({} as Template)} size="lg">
+                <PlusCircle className="mr-2 h-5 w-5" />
                 New Template
               </Button>
             )}
@@ -150,12 +144,14 @@ export default function TemplatesPage() {
           )}
         </div>
 
-        <PromptPreview
-          template={selectedTemplate}
-          dynamicFields={dynamicFields}
-          onDynamicFieldsChange={setDynamicFields}
-          onSaveEnhanced={handleSaveEnhanced}
-        />
+        <div className="lg:pl-4">
+          <PromptPreview
+            template={selectedTemplate}
+            dynamicFields={dynamicFields}
+            onDynamicFieldsChange={setDynamicFields}
+            onSaveEnhanced={handleSaveEnhanced}
+          />
+        </div>
       </div>
     </div>
   );
