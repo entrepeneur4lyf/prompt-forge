@@ -1,7 +1,7 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@db/schema";
+import pg from 'pg';
+const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -9,28 +9,29 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-console.log("Initializing database connection with Neon...");
+console.log("Initializing database connection with PostgreSQL...");
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: true,
+  ssl: {
+    rejectUnauthorized: false // Required for some PostgreSQL providers
+  },
+  max: 3, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
-  max: 1,
-  wsProxy: true,
-  WebSocket: ws,
 });
 
 // Test the connection and keep it warm
 async function validateConnection() {
   try {
     const client = await pool.connect();
-    console.log("Successfully connected to Neon database");
+    console.log("Successfully connected to PostgreSQL database");
     const result = await client.query('SELECT version()');
     console.log("Database version:", result.rows[0].version);
     client.release();
     return true;
   } catch (error) {
-    console.error("Failed to connect to Neon database:", error);
+    console.error("Failed to connect to PostgreSQL database:", error);
     throw error;
   }
 }
