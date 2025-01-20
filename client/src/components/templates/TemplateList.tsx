@@ -52,7 +52,6 @@ export default function TemplateList({
       };
       return variants[value] || 'default';
     } else {
-      // Model type variants
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Claude-Sonnet-3.5': 'default',
         'GPT-4': 'secondary',
@@ -76,7 +75,7 @@ export default function TemplateList({
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-testid="template-list-card">
       <div className="space-y-5">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-foreground">Templates</h2>
@@ -84,13 +83,25 @@ export default function TemplateList({
             value={selectedDomain} 
             onValueChange={setSelectedDomain}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger 
+              className="w-[180px]"
+              data-testid="template-list-filter-domain"
+            >
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem 
+                value="all"
+                data-testid="template-list-filter-domain-option-all"
+              >
+                All Categories
+              </SelectItem>
               {templateDomains.map(domain => (
-                <SelectItem key={domain} value={domain}>
+                <SelectItem 
+                  key={domain} 
+                  value={domain}
+                  data-testid={`template-list-filter-domain-option-${domain.toLowerCase()}`}
+                >
                   {domain}
                 </SelectItem>
               ))}
@@ -109,6 +120,7 @@ export default function TemplateList({
                     : 'border-border hover:border-primary/50'
                 }`}
                 onClick={() => onSelect(template)}
+                data-testid={`template-list-item-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -123,6 +135,7 @@ export default function TemplateList({
                       size="sm"
                       onClick={(e) => handleEditClick(e, template)}
                       title="Edit template"
+                      data-testid={`template-list-button-edit-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <Pencil className="h-4 w-4 text-muted-foreground" />
                     </Button>
@@ -131,20 +144,30 @@ export default function TemplateList({
                       size="sm"
                       onClick={(e) => handleDeleteClick(e, template.id)}
                       title="Delete template"
+                      data-testid={`template-list-button-delete-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant={getBadgeVariant('domain', template.domain)}>
+                  <Badge 
+                    variant={getBadgeVariant('domain', template.domain)}
+                    data-testid={`template-list-badge-domain-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
                     {template.domain}
                   </Badge>
-                  <Badge variant={getBadgeVariant('provider', template.providerType)}>
+                  <Badge 
+                    variant={getBadgeVariant('provider', template.providerType)}
+                    data-testid={`template-list-badge-provider-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
                     {template.providerType}
                   </Badge>
                   {template.modelType && (
-                    <Badge variant={getBadgeVariant('model', template.modelType)}>
+                    <Badge 
+                      variant={getBadgeVariant('model', template.modelType)}
+                      data-testid={`template-list-badge-model-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
                       {template.modelType}
                     </Badge>
                   )}

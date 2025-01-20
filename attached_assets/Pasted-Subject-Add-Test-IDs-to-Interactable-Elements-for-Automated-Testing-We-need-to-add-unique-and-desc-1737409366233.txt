@@ -1,0 +1,19 @@
+Subject: Add Test IDs to Interactable Elements for Automated Testing
+
+We need to add unique and descriptive data-testid attributes to all interactable elements in the Prompt Forge application. This will make it easier to identify and interact with these elements during automated testing using an LLM-powered browser automation tool (like the browser-use tool we're working with).
+
+Requirements:
+
+data-testid Attributes: Add a data-testid attribute to each of the following types of interactable elements:
+Buttons: All buttons, including "Create Template," "Update Template," "Enhance," "Save Enhanced Prompt as Template," "Cancel," "Copy," settings buttons, and any others.
+Input Fields: All text input fields (e.g., "Name," "Content," "Additional Enhancement Instructions," "Custom Instructions", "name", "company", etc.).
+Dropdowns: All dropdown menus (e.g., "Domain," "Provider," "Model," "Role").
+Checkboxes: All checkboxes (e.g., "Agent Enhanced," methodologies like "TDD," "BDD," etc.).
+Radio Buttons: All radio button groups (e.g., "Role" selection).
+List Items: Each individual template item in the "Templates" list (including the template itself that is used to select the template).
+Settings Panel Elements: All interactive elements within the settings panel (e.g., input fields, buttons).
+Naming Convention: Use a consistent and descriptive naming convention for the data-testid values. I suggest the following format:
+[component-name]-[element-type]-[element-name] (e.g., template-form-button-create, template-list-item-edit, settings-input-api-key).
+If an element is dynamic and can appear multiple times (like a template in the template list), make sure to include a unique identifier in the test id (like the template's name). For example: template-list-item-welcome-select, template-list-item-welcome-edit.
+Uniqueness: Ensure that each data-testid value is unique within the application.
+Maintainability: Add the data-testid attributes in a way that is maintainable and easy to update if the UI changes.

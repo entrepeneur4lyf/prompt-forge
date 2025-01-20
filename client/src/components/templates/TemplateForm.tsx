@@ -65,13 +65,13 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-testid="template-form-card">
       <h2 className="text-xl font-bold mb-6">
         {template?.id ? 'Edit Template' : 'Create Template'}
       </h2>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" data-testid="template-form">
           <FormField
             control={form.control}
             name="name"
@@ -79,7 +79,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter template name" />
+                  <Input {...field} placeholder="Enter template name" data-testid="template-form-input-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,6 +97,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                     {...field}
                     placeholder="Enter template content with {{placeholders}}"
                     className="min-h-[100px]"
+                    data-testid="template-form-textarea-content"
                   />
                 </FormControl>
                 <FormMessage />
@@ -113,13 +114,17 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                   <FormLabel>Domain</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="template-form-select-domain">
                         <SelectValue placeholder="Select domain" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {templateDomains.map((domain) => (
-                        <SelectItem key={domain} value={domain}>
+                        <SelectItem 
+                          key={domain} 
+                          value={domain}
+                          data-testid={`template-form-select-domain-option-${domain.toLowerCase()}`}
+                        >
                           {domain}
                         </SelectItem>
                       ))}
@@ -138,13 +143,17 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                   <FormLabel>Provider</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="template-form-select-provider">
                         <SelectValue placeholder="Select provider" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {providerTypes.map((provider) => (
-                        <SelectItem key={provider} value={provider}>
+                        <SelectItem 
+                          key={provider} 
+                          value={provider}
+                          data-testid={`template-form-select-provider-option-${provider.toLowerCase()}`}
+                        >
                           {provider}
                         </SelectItem>
                       ))}
@@ -163,13 +172,17 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                   <FormLabel>Model</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="template-form-select-model">
                         <SelectValue placeholder="Select model" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {modelTypes.map((model) => (
-                        <SelectItem key={model} value={model}>
+                        <SelectItem 
+                          key={model} 
+                          value={model}
+                          data-testid={`template-form-select-model-option-${model.toLowerCase().replace(/\./g, '-')}`}
+                        >
                           {model}
                         </SelectItem>
                       ))}
@@ -188,13 +201,17 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                   <FormLabel>Role</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="template-form-select-role">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {roleTypes.map((role) => (
-                        <SelectItem key={role} value={role}>
+                        <SelectItem 
+                          key={role} 
+                          value={role}
+                          data-testid={`template-form-select-role-option-${role.toLowerCase()}`}
+                        >
                           {role}
                         </SelectItem>
                       ))}
@@ -234,6 +251,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                                       field.value?.filter((value) => value !== methodology)
                                     );
                                 }}
+                                data-testid={`template-form-checkbox-methodology-${methodology.toLowerCase()}`}
                               />
                             </FormControl>
                             <FormLabel className="text-sm font-normal">
@@ -259,6 +277,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    data-testid="template-form-checkbox-is-core"
                   />
                 </FormControl>
                 <FormLabel className="!mt-0">Core Template</FormLabel>
@@ -271,10 +290,18 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
           />
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              data-testid="template-form-button-cancel"
+            >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button 
+              type="submit"
+              data-testid="template-form-button-submit"
+            >
               {template?.id ? 'Update Template' : 'Create Template'}
             </Button>
           </div>
