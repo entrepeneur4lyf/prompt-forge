@@ -5,7 +5,7 @@ import { enhancePrompt } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Wand2, Loader2 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export default function PromptPreview({
   onDynamicFieldsChange,
 }: PromptPreviewProps) {
   const { toast } = useToast();
-  const [enhancerEnabled, setEnhancerEnabled] = useState(false);
+  const [enhancementInstructions, setEnhancementInstructions] = useState('');
 
   const enhanceMutation = useMutation({
     mutationFn: enhancePrompt,
@@ -59,9 +59,8 @@ export default function PromptPreview({
     return prompt;
   };
 
-  const copyToClipboard = async () => {
-    const prompt = enhanceMutation.data?.enhancedPrompt || generatePrompt();
-    await navigator.clipboard.writeText(prompt);
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
     toast({
       title: 'Copied',
       description: 'Prompt copied to clipboard',
@@ -69,30 +68,19 @@ export default function PromptPreview({
   };
 
   const handleEnhance = async () => {
-    if (enhancerEnabled) {
-      const prompt = generatePrompt();
-      enhanceMutation.mutate(prompt);
-    }
+    const prompt = generatePrompt();
+    const defaultInstructions = "Please rewrite and enhance the following prompt, make it more creative and engaging:";
+    const instructions = enhancementInstructions 
+      ? `${defaultInstructions} ${enhancementInstructions}:`
+      : `${defaultInstructions}:`;
+
+    const fullPrompt = `${instructions} ${prompt}`;
+    enhanceMutation.mutate(fullPrompt);
   };
 
   return (
     <Card className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Preview</h2>
-        <div className="flex items-center gap-2">
-          <Wand2 className="h-4 w-4" />
-          <span>Enhancer</span>
-          <Switch
-            checked={enhancerEnabled}
-            onCheckedChange={(checked) => {
-              setEnhancerEnabled(checked);
-              if (!checked) {
-                enhanceMutation.reset();
-              }
-            }}
-          />
-        </div>
-      </div>
+      <h2 className="text-xl font-semibold mb-4">Preview</h2>
 
       <div className="space-y-4 mb-4">
         {placeholders.map((placeholder) => {
@@ -122,27 +110,59 @@ export default function PromptPreview({
       </div>
 
       <div className="space-y-4">
-        <div className="bg-muted p-4 rounded-lg min-h-[100px] whitespace-pre-wrap">
-          {enhanceMutation.data?.enhancedPrompt || generatePrompt()}
+        <div>
+          <label className="text-sm font-medium mb-1 block">
+            Generated Prompt
+          </label>
+          <div className="bg-muted p-4 rounded-lg min-h-[100px] whitespace-pre-wrap">
+            {generatePrompt()}
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            className="flex-1"
-            onClick={handleEnhance}
-            disabled={!enhancerEnabled || enhanceMutation.isPending}
-          >
-            {enhanceMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Wand2 className="mr-2 h-4 w-4" />
-            )}
-            Enhance
-          </Button>
-          <Button className="flex-1" onClick={copyToClipboard}>
-            <Copy className="mr-2 h-4 w-4" />
-            Copy
-          </Button>
+        {enhanceMutation.data && (
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              Enhanced Prompt
+            </label>
+            <div className="bg-muted p-4 rounded-lg min-h-[100px] whitespace-pre-wrap">
+              {enhanceMutation.data.enhancedPrompt}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              Enhancement Instructions (Optional)
+            </label>
+            <Input
+              value={enhancementInstructions}
+              onChange={(e) => setEnhancementInstructions(e.target.value)}
+              placeholder="Add specific instructions for enhancement"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              className="flex-1"
+              onClick={handleEnhance}
+              disabled={enhanceMutation.isPending}
+            >
+              {enhanceMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              Enhance
+            </Button>
+            <Button 
+              className="flex-1" 
+              onClick={() => copyToClipboard(enhanceMutation.data?.enhancedPrompt || generatePrompt())}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
