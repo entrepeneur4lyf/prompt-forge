@@ -1,0 +1,25 @@
+We need to add a new top-level category for meta-prompts (prompts that generate other prompts).
+
+Add a new TemplateDomain: Add a new domain type called 'Meta' to the TemplateDomain enum.
+Create Default Enhancement Instructions: Add a new entry to the domains section in defaultPrompts for the 'Meta' domain. The instructions should focus on improving the meta-prompt's ability to generate clear, well-structured, and effective prompts. Consider aspects like:
+Clarity of instructions for the type of prompt to be generated.
+Effective use of placeholders or variables for customization.
+Inclusion of sufficient context for generating relevant prompts.
+Specification of the desired output format.
+Update generateEnhancementPrompt: Modify the generateEnhancementPrompt function to handle the 'Meta' domain. When enhancing a meta-prompt, use the specific instructions for the 'Meta' domain to guide the enhancement process.
+Here's an example of what the new entry in defaultPrompts might look like:
+
+TypeScript
+
+domains: {
+  // ... other domains
+  'Meta': "This prompt is a meta-prompt, designed to generate other prompts. Improve the clarity, structure, and effectiveness of this meta-prompt. Ensure it provides sufficient context and instructions to generate high-quality prompts for the intended purpose.",
+  // ... other domains
+}
+After implementing these changes, we should test the enhancement of meta-prompts thoroughly to ensure it's working as expected."
+
+Further Considerations:
+
+Meta-Prompt Specific Options: You might want to add specific options or settings for meta-prompts, such as a field to specify the intended output format (e.g., "JSON," "String").
+Examples: Providing a few examples of well-structured meta-prompts in the documentation or as default templates could be helpful for users.
+By adding a dedicated category for meta-prompts and tailoring the enhancement instructions accordingly, you'll make the Prompt Template Manager even more powerful and versatile. It will be able to handle not only regular prompts but also prompts that are designed to create other prompts, opening up new possibilities for prompt engineering and automation.

@@ -14,7 +14,8 @@ export const defaultPrompts: PromptConfig = {
     'General': "Focus on clarity, conciseness, and relevance to the given context.",
     'Marketing': "Focus on persuasiveness, clarity, and engagement. Tailor the message to the target audience and the specific marketing channel.",
     'Education': "Focus on clarity, accuracy, and pedagogical effectiveness. Consider the age and knowledge level of the learners.",
-    'Creative Writing': "Focus on originality, vivid language, and engaging storytelling."
+    'Creative Writing': "Focus on originality, vivid language, and engaging storytelling.",
+    'Meta': "Focus on creating clear, effective instructions for generating prompts. Ensure the meta-prompt provides sufficient context and structure for generating high-quality prompts. Consider aspects like variable placeholders, output format, and desired characteristics of generated prompts."
   },
   agents: {
     'Cursor': "Optimize the prompt for code editing and generation within an IDE environment. Assume the agent has access to the entire codebase.",

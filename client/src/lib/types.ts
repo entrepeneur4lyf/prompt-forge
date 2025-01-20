@@ -1,4 +1,4 @@
-export const templateDomains = ['Code', 'General', 'Marketing', 'Education', 'Creative Writing'] as const;
+export const templateDomains = ['Code', 'General', 'Marketing', 'Education', 'Creative Writing', 'Meta'] as const;
 export const agentTypes = ['Cursor', 'Replit', 'Claude', 'DeepSeek', 'Browser Agent'] as const;
 export const modelTypes = ['GPT-4', 'Gemini', 'General'] as const;
 export const roleTypes = ['Architect', 'Developer', 'Tester'] as const;
