@@ -9,6 +9,7 @@ import SettingsDialog from '@/components/settings/SettingsDialog';
 import { Button } from '@/components/ui/button';
 import { Settings, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading';
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -88,11 +89,11 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <div>Loading templates...</div>;
+    return <LoadingSpinner />;
   }
 
   if (error) {
-    return <div>Error loading templates</div>;
+    throw error; // This will be caught by ErrorBoundary
   }
 
   return (
