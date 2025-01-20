@@ -7,12 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MarkdownPreview } from '@/components/ui/markdown-preview';
-import { MarkdownHelp } from './markdown-help';
 
 interface TemplateFormProps {
   template: Template | null;
@@ -78,12 +75,9 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
 
   return (
     <Card className="p-6" data-testid="template-form-card">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">
-          {template?.id ? 'Edit Template' : 'Create Template'}
-        </h2>
-        <MarkdownHelp />
-      </div>
+      <h2 className="text-xl font-bold mb-6">
+        {template?.id ? 'Edit Template' : 'Create Template'}
+      </h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" data-testid="template-form">
@@ -107,27 +101,16 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Content</FormLabel>
-                <Tabs defaultValue="edit" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="edit">Edit</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="edit">
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Enter template content with {{placeholders}} and markdown formatting"
-                        className="min-h-[200px] font-mono"
-                        data-testid="template-form-textarea-content"
-                      />
-                    </FormControl>
-                  </TabsContent>
-                  <TabsContent value="preview" className="rounded-md border p-4">
-                    <MarkdownPreview content={field.value} />
-                  </TabsContent>
-                </Tabs>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="Enter template content with {{placeholders}}"
+                    className="min-h-[200px] font-mono"
+                    data-testid="template-form-textarea-content"
+                  />
+                </FormControl>
                 <FormDescription>
-                  Use markdown syntax for formatting. Click the help icon above for formatting guide.
+                  Use {{placeholder}} syntax for dynamic content
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -164,7 +147,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               )}
             />
 
-            {/* Agent Enhancement Fields - Only show when domain is Meta */}
             {domain === 'Meta' && (
               <>
                 <FormField
