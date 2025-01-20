@@ -81,11 +81,11 @@ export default function TemplatesPage() {
     setEditingTemplate(template);
   };
 
-  const handleSubmit = async (template: Template) => {
-    if (template.id) {
-      updateMutation.mutate(template);
+  const handleSubmit = async (template: Partial<Template>) => {
+    if (editingTemplate?.id) {
+      updateMutation.mutate({ ...template, id: editingTemplate.id } as Template);
     } else {
-      createMutation.mutate(template);
+      createMutation.mutate(template as Template);
     }
   };
 
