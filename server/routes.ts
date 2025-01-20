@@ -7,14 +7,19 @@ import { eq } from "drizzle-orm";
 export function registerRoutes(app: Express): Server {
   // Templates CRUD
   app.get("/api/templates", async (_req, res) => {
+    console.log("GET /api/templates - Starting request");
     try {
+      // Using Drizzle directly without manual client connection
+      console.log("Executing Drizzle query to fetch templates...");
       const allTemplates = await db.select().from(templates);
+      console.log("Query successful, found", allTemplates.length, "templates");
       res.json(allTemplates);
     } catch (error) {
-      console.error("Error fetching templates:", error);
+      console.error("Error in /api/templates:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
       res.status(500).json({ 
         message: "Failed to fetch templates",
-        details: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   });
