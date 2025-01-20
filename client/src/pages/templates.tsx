@@ -41,13 +41,16 @@ export default function TemplatesPage() {
 
   const updateMutation = useMutation({
     mutationFn: updateTemplate,
-    onSuccess: () => {
+    onSuccess: (updatedTemplate) => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       toast({
         title: 'Success',
         description: 'Template updated successfully',
       });
+      // Update both editing and selected states
       setEditingTemplate(null);
+      setSelectedTemplate(updatedTemplate);
+      console.log('Template updated, new state:', updatedTemplate); // Debug log
     },
     onError: (error) => {
       toast({
