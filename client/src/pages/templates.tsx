@@ -78,6 +78,7 @@ export default function TemplatesPage() {
   });
 
   const handleEdit = (template: Template) => {
+    console.log('Editing template:', template); // Debug log
     setSelectedTemplate(null);
     setEditingTemplate({
       ...template,
@@ -90,6 +91,7 @@ export default function TemplatesPage() {
   };
 
   const handleSubmit = async (template: Partial<Template>) => {
+    console.log('Submitting template:', template); // Debug log
     if (editingTemplate?.id) {
       updateMutation.mutate({ ...template, id: editingTemplate.id } as Template);
     } else {
@@ -102,6 +104,7 @@ export default function TemplatesPage() {
   };
 
   const handleSaveEnhanced = (enhanced: Template) => {
+    console.log('Saving enhanced template:', enhanced); // Debug log
     setEditingTemplate(enhanced);
   };
 

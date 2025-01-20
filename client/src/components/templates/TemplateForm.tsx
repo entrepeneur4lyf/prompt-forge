@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEffect } from 'react';
 
 interface TemplateFormProps {
   template: Template | null;
@@ -15,6 +16,8 @@ interface TemplateFormProps {
 }
 
 export default function TemplateForm({ template, onSubmit, onCancel }: TemplateFormProps) {
+  console.log('Template Form received template:', template); // Debug log
+
   const form = useForm<CreateTemplateInput>({
     defaultValues: {
       name: template?.name || '',
@@ -29,7 +32,30 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
     },
   });
 
+  // Update form when template changes
+  useEffect(() => {
+    if (template) {
+      console.log('Resetting form with template:', template); // Debug log
+      form.reset({
+        name: template.name,
+        content: template.content,
+        isCore: template.isCore,
+        domain: template.domain,
+        agentEnhanced: template.agentEnhanced,
+        agentType: template.agentType,
+        modelType: template.modelType,
+        roleType: template.roleType,
+        methodologies: template.methodologies,
+      });
+    }
+  }, [template, form]);
+
   const agentEnhanced = form.watch('agentEnhanced');
+
+  const handleSubmit = (data: CreateTemplateInput) => {
+    console.log('Form submitting data:', data); // Debug log
+    onSubmit(template?.id ? { ...data, id: template.id } : data);
+  };
 
   return (
     <Card className="p-4 mt-4">
@@ -38,7 +64,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       </h2>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((data) => onSubmit({ ...data, id: template?.id }))} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="name"
