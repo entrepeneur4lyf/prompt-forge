@@ -7,7 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2 } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2 } from 'lucide-react';
+import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
+import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface PromptPreviewProps {
   template: Template | null;
@@ -22,6 +25,8 @@ export default function PromptPreview({
 }: PromptPreviewProps) {
   const { toast } = useToast();
   const [enhancementInstructions, setEnhancementInstructions] = useState('');
+  const [showPromptsDialog, setShowPromptsDialog] = useState(false);
+  const [composedPrompt, setComposedPrompt] = useState('');
 
   const enhanceMutation = useMutation({
     mutationFn: enhancePrompt,
@@ -68,19 +73,25 @@ export default function PromptPreview({
   };
 
   const handleEnhance = async () => {
-    const prompt = generatePrompt();
-    const defaultInstructions = "Please rewrite and enhance the following prompt, make it more creative and engaging:";
-    const instructions = enhancementInstructions 
-      ? `${defaultInstructions} ${enhancementInstructions}:`
-      : `${defaultInstructions}:`;
-
-    const fullPrompt = `${instructions} ${prompt}`;
+    const basePrompt = generatePrompt();
+    const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, enhancementInstructions);
+    const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
     enhanceMutation.mutate(fullPrompt);
   };
 
   return (
     <Card className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Preview</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Preview</h2>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowPromptsDialog(true)}
+        >
+          <Settings2 className="mr-2 h-4 w-4" />
+          Enhancement Prompts
+        </Button>
+      </div>
 
       <div className="space-y-6 mb-8">
         {placeholders.map((placeholder) => {
@@ -153,8 +164,29 @@ export default function PromptPreview({
 
         <div className="space-y-4">
           <div>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <label className="text-sm font-medium mb-2 block cursor-help">
+                  Composed Enhancement Prompt
+                </label>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-sm">
+                  This is the full prompt that will be used to enhance your generated prompt.
+                  You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
+                </p>
+              </HoverCardContent>
+            </HoverCard>
+            <Textarea
+              value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
+              onChange={(e) => setComposedPrompt(e.target.value)}
+              className="min-h-[150px] font-mono text-sm"
+            />
+          </div>
+
+          <div>
             <label className="text-sm font-medium mb-2 block">
-              Enhancement Instructions (Optional)
+              Additional Enhancement Instructions (Optional)
             </label>
             <Input
               value={enhancementInstructions}
@@ -178,6 +210,11 @@ export default function PromptPreview({
           </Button>
         </div>
       </div>
+
+      <EnhancementPromptsDialog 
+        open={showPromptsDialog}
+        onClose={() => setShowPromptsDialog(false)}
+      />
     </Card>
   );
 }
