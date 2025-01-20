@@ -38,6 +38,8 @@ export const templates = pgTable("templates", {
   modelType: text("model_type", { enum: modelTypes }).default('Claude-Sonnet-3.5').notNull(),
   roleType: text("role_type", { enum: roleTypes }).default('None').notNull(),
   methodologies: text("methodologies").array().notNull().default([]),
+  agentEnhanced: boolean("agent_enhanced").default(false).notNull(),
+  agentType: text("agent_type", { enum: roleTypes }).default('None').notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -25,7 +25,9 @@ const templateFormSchema = z.object({
   providerType: z.enum(providerTypes),
   modelType: z.enum(modelTypes),
   roleType: z.enum(roleTypes),
-  methodologies: z.array(z.enum(methodologyTypes))
+  methodologies: z.array(z.enum(methodologyTypes)),
+  agentEnhanced: z.boolean().optional(),
+  agentType: z.enum(['None', 'Architect', 'Developer', 'Tester']).optional()
 });
 
 type FormData = z.infer<typeof templateFormSchema>;
@@ -42,8 +44,13 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
       roleType: template?.roleType || 'None',
       methodologies: template?.methodologies || [],
+      agentEnhanced: template?.agentEnhanced || false,
+      agentType: template?.agentType || 'None'
     },
   });
+
+  const domain = form.watch('domain');
+  const agentEnhanced = form.watch('agentEnhanced');
 
   useEffect(() => {
     if (template) {
@@ -56,6 +63,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
         modelType: template.modelType,
         roleType: template.roleType,
         methodologies: template.methodologies,
+        agentEnhanced: template.agentEnhanced,
+        agentType: template.agentType
       });
     }
   }, [template, form]);
@@ -134,6 +143,63 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 </FormItem>
               )}
             />
+
+            {/* Agent Enhancement Fields - Only show when domain is Meta */}
+            {domain === 'Meta' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="agentEnhanced"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="template-form-checkbox-agent-enhanced"
+                        />
+                      </FormControl>
+                      <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
+                      <FormDescription>
+                        Enable agent-specific instructions
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {agentEnhanced && (
+                  <FormField
+                    control={form.control}
+                    name="agentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Agent Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="template-form-select-agent-type">
+                              <SelectValue placeholder="Select agent type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {['None', 'Architect', 'Developer', 'Tester'].map((type) => (
+                              <SelectItem 
+                                key={type} 
+                                value={type}
+                                data-testid={`template-form-select-agent-type-option-${type.toLowerCase()}`}
+                              >
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </>
+            )}
 
             <FormField
               control={form.control}
