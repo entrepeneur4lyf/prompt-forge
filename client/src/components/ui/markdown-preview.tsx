@@ -1,14 +1,22 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeHighlight from 'rehype-highlight';
+import { marked } from 'marked';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 interface MarkdownPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   content: string;
 }
 
 export function MarkdownPreview({ content, className, ...props }: MarkdownPreviewProps) {
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    marked.parse(content, (err, result) => {
+      if (!err && result) {
+        setHtml(result);
+      }
+    });
+  }, [content]);
+
   return (
     <div 
       className={cn(
@@ -22,14 +30,8 @@ export function MarkdownPreview({ content, className, ...props }: MarkdownPrevie
         "prose-blockquote:text-muted-foreground prose-blockquote:border-l-primary",
         className
       )} 
+      dangerouslySetInnerHTML={{ __html: html }}
       {...props}
-    >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, [rehypeHighlight, { ignoreMissing: true }]]}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    />
   );
 }
