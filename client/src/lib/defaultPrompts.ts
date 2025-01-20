@@ -25,8 +25,16 @@ export const defaultPrompts: PromptConfig = {
     'Browser Agent': "Optimize the prompt for tasks that involve interacting with web pages."
   },
   models: {
-    'GPT-4': "Leverage GPT-4's strengths in general-purpose language understanding and generation.",
-    'Gemini': "Leverage Gemini's strengths in reasoning, problem-solving, and code generation.",
+    'GPT-3.5-Turbo': "Optimize for GPT-3.5 Turbo's strengths in general-purpose tasks while being mindful of its limitations.",
+    'GPT-4': "Leverage GPT-4's advanced reasoning and deeper context understanding capabilities.",
+    'GPT-4-Turbo': "Utilize GPT-4-Turbo's enhanced speed and up-to-date knowledge while maintaining high accuracy.",
+    'Claude-Sonnet': "Optimize for Claude Sonnet's nuanced understanding and creative capabilities.",
+    'Claude-Haiku': "Focus on concise, efficient responses suited for Claude Haiku's quick processing.",
+    'Claude-Opus': "Leverage Claude Opus's advanced reasoning and extended context capabilities.",
+    'Replit-Code': "Optimize for Replit Code's specialized code generation and completion features.",
+    'Replit-Chat': "Utilize Replit Chat's conversational abilities within the development context.",
+    'Deepseek-Coder': "Leverage Deepseek Coder's specialized code understanding and generation capabilities.",
+    'Gemini-Pro': "Optimize for Gemini Pro's strong reasoning and problem-solving capabilities.",
     'General': "Make the instructions clear and unambiguous."
   },
   roles: {
@@ -74,11 +82,16 @@ export function generateEnhancementPrompt(
     roleType: RoleType;
     methodologies: MethodologyType[];
   },
+  originalPrompt: string,
   customInstructions?: string
 ): string {
   const prompts = defaultPrompts;
 
   const parts = [
+    "Please enhance the following prompt while maintaining its core intent and purpose:",
+    `Original Prompt: ${originalPrompt}`,
+    "",
+    "Enhancement Instructions:",
     prompts.domains[template.domain],
     template.agentEnhanced && template.agentType ? 
       `This prompt will be used with ${template.agentType}. ${prompts.agents[template.agentType]}` : null,
@@ -94,7 +107,7 @@ export function generateEnhancementPrompt(
   }
 
   // Add instruction to prevent commentary and formatting
-  finalPrompt += '\n\nIMPORTANT: Return only the enhanced prompt without any headers, sections, formatting markers, or additional commentary. Do not include phrases like "Enhanced Prompt" or explanatory notes.';
+  finalPrompt += '\n\nIMPORTANT: Return only the enhanced version of the prompt. Do not include any commentary, explanations, or formatting markers. Do not prefix with phrases like "Enhanced Prompt:" or add any other labels.';
 
   return finalPrompt;
 }
