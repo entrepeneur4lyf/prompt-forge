@@ -7,21 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2 } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2, Save } from 'lucide-react';
 import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
 import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { encodePlaceholders, decodePlaceholders, preservePlaceholders } from '@/lib/utils';
 
 interface PromptPreviewProps {
   template: Template | null;
   dynamicFields: DynamicField[];
   onDynamicFieldsChange: (fields: DynamicField[]) => void;
+  onSaveEnhanced?: (template: Template) => void;
 }
 
 export default function PromptPreview({
   template,
   dynamicFields,
   onDynamicFieldsChange,
+  onSaveEnhanced,
 }: PromptPreviewProps) {
   const { toast } = useToast();
   const [enhancementInstructions, setEnhancementInstructions] = useState('');
@@ -69,6 +72,27 @@ export default function PromptPreview({
     toast({
       title: 'Copied',
       description: 'Prompt copied to clipboard',
+    });
+  };
+
+  const handleSaveEnhanced = () => {
+    if (!enhanceMutation.data?.enhancedPrompt || !onSaveEnhanced || !template) {
+      return;
+    }
+
+    const preservedContent = preservePlaceholders(
+      decodePlaceholders(enhanceMutation.data.enhancedPrompt),
+      template.content
+    );
+
+    onSaveEnhanced({
+      ...template,
+      content: preservedContent,
+    });
+
+    toast({
+      title: 'Template Updated',
+      description: 'Enhanced prompt has been saved to the template.',
     });
   };
 
@@ -173,21 +197,37 @@ export default function PromptPreview({
 
         {enhanceMutation.data && (
           <div>
-            <label className="text-sm font-semibold mb-2 block">
-              Enhanced Prompt
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold">
+                Enhanced Prompt
+              </label>
+              {onSaveEnhanced && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveEnhanced}
+                  className="ml-2"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save as Template
+                </Button>
+              )}
+            </div>
             <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg min-h-[150px]">
               <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-2 right-2 h-8 w-8"
-                onClick={() => copyToClipboard(enhanceMutation.data.enhancedPrompt)}
+                onClick={() => copyToClipboard(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <div className="whitespace-pre-wrap pt-8">
-                {enhanceMutation.data.enhancedPrompt}
-              </div>
+              <div 
+                className="whitespace-pre-wrap pt-8"
+                dangerouslySetInnerHTML={{ 
+                  __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt) 
+                }}
+              />
             </div>
           </div>
         )}
