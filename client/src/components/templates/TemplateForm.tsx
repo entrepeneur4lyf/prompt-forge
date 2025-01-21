@@ -73,15 +73,10 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    const fieldName = (e.target as HTMLTextAreaElement).name;
-    if (e.key === 'Enter' && fieldName.toLowerCase().includes('content')) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       form.handleSubmit(handleSubmit)();
     }
-  };
-
-  const isPromptField = (fieldName: string) => {
-    return fieldName.toLowerCase().includes('content');
   };
 
   return (
@@ -130,7 +125,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       <Textarea
                         {...field}
                         placeholder="Enter template content with {{placeholders}} and markdown formatting"
-                        className={`min-h-[200px] font-mono resize-y ${isPromptField(field.name) ? 'bg-muted/30' : ''}`}
+                        className="min-h-[200px] font-mono resize-y"
                         data-testid="template-form-textarea-content"
                         onKeyDown={handleKeyPress}
                       />
@@ -142,11 +137,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 </Tabs>
                 <FormDescription>
                   Use markdown syntax for formatting. Click the help icon above for formatting guide.
-                  {isPromptField(field.name) && (
-                    <span className="block mt-1 text-sm text-muted-foreground">
-                      Press Enter to submit prompt for enhancement
-                    </span>
-                  )}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -167,9 +157,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                     />
                   </FormControl>
                   <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
-                  <FormDescription>
-                    Enable agent role-based enhancement
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -181,11 +168,11 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 name="agentType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Agent Role</FormLabel>
+                    <FormLabel>Agent</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="template-form-select-agent-type">
-                          <SelectValue placeholder="Select agent role" />
+                          <SelectValue placeholder="Select agent type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -206,7 +193,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               />
             )}
           </div>
-
 
           <FormField
             control={form.control}
