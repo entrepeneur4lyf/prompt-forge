@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, X, RotateCcw } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, RotateCcw } from 'lucide-react';
 import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
 import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -73,26 +73,9 @@ export default function PromptPreview({
     handleEnhance();
   };
 
-  const clearAll = () => {
-    onDynamicFieldsChange([]);
-    setComposedPrompt('');
-    enhanceMutation.reset();
-    toast({
-      title: 'Cleared',
-      description: 'All prompts have been cleared',
-    });
-  };
-
-  const clearGenerated = () => {
-    enhanceMutation.reset();
-    toast({
-      title: 'Cleared',
-      description: 'Enhanced prompt has been cleared',
-    });
-  };
-
   const resetToOriginal = () => {
     onDynamicFieldsChange([]);
+    enhanceMutation.reset();
     toast({
       title: 'Reset',
       description: 'Prompt reset to original template',
@@ -121,6 +104,22 @@ export default function PromptPreview({
     return prompt;
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: 'Copied',
+        description: 'Content copied to clipboard',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to copy to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!template) {
     return (
       <Card className="p-4">
@@ -146,24 +145,6 @@ export default function PromptPreview({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Preview</h2>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearAll}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Clear All
-          </Button>
-          {enhanceMutation.data && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearGenerated}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Clear Enhanced
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"
@@ -277,35 +258,21 @@ export default function PromptPreview({
           <div>
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-semibold">{enableEnhancement ? 'Enhanced' : 'Generated'} Prompt</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const newFields = [];
-                    onDynamicFieldsChange(newFields);
-                    enhanceMutation.reset();
-                  }}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Clear
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetToOriginal}
-                >
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset to Original
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToOriginal}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset Enhanced
+              </Button>
             </div>
             <div className="relative bg-muted p-4 rounded-lg min-h-[120px]">
               <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-2 right-2 h-8 w-8"
-                onClick={() => navigator.clipboard.writeText(generatePrompt())}
+                onClick={() => copyToClipboard(generatePrompt())}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -343,7 +310,7 @@ export default function PromptPreview({
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8"
-                  onClick={() => navigator.clipboard.writeText(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
+                  onClick={() => copyToClipboard(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
