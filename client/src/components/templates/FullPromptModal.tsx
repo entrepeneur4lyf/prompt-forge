@@ -7,6 +7,12 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Template } from '@/lib/types';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Copy } from 'lucide-react';
+import { useState, useEffect as ReactuseEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FullPromptModalProps {
   open: boolean;
@@ -15,6 +21,7 @@ interface FullPromptModalProps {
   dynamicFields: Array<{ name: string; value: string }>;
   enhancedPrompt: string;
   enableEnhancement: boolean;
+  onSave?: (content: string) => void;
 }
 
 export function FullPromptModal({ 
@@ -23,8 +30,13 @@ export function FullPromptModal({
   template, 
   dynamicFields,
   enhancedPrompt,
-  enableEnhancement 
+  enableEnhancement,
+  onSave
 }: FullPromptModalProps) {
+  const { toast } = useToast();
+  const [editableContent, setEditableContent] = useState('');
+  const [activeTab, setActiveTab] = useState('view');
+
   if (!template) return null;
 
   const renderSection = (title: string, content: string) => (
@@ -69,6 +81,37 @@ Please enhance the following prompt while maintaining its core intent and purpos
 
 ${originalContent}`;
   };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(editableContent || constructFinalPrompt());
+      toast({
+        title: "Copied!",
+        description: "Prompt copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(editableContent);
+      toast({
+        title: "Saved!",
+        description: "Changes saved successfully",
+      });
+    }
+  };
+
+  // Initialize editable content when modal opens or content changes
+  ReactuseEffect(() => {
+    setEditableContent(constructFinalPrompt());
+  }, [template, dynamicFields, enhancedPrompt, enableEnhancement]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -120,10 +163,55 @@ ${originalContent}`;
               </>
             )}
 
-            {renderSection(
-              enableEnhancement ? "Complete Enhancement Prompt" : "Generated Prompt", 
-              constructFinalPrompt()
-            )}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  {enableEnhancement ? "Complete Enhancement Prompt" : "Generated Prompt"}
+                </h3>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleCopy}
+                    className="flex items-center gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                  {onSave && (
+                    <Button 
+                      size="sm"
+                      onClick={handleSave}
+                      className="flex items-center gap-2"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Tabs defaultValue="view" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="view">View</TabsTrigger>
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                </TabsList>
+                <TabsContent value="view">
+                  <Card className="p-4">
+                    <div className="whitespace-pre-wrap font-mono text-sm">
+                      {constructFinalPrompt()}
+                    </div>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="edit">
+                  <Textarea
+                    value={editableContent}
+                    onChange={(e) => setEditableContent(e.target.value)}
+                    className="min-h-[300px] font-mono"
+                    data-testid="full-prompt-modal-textarea"
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>

@@ -126,6 +126,20 @@ export default function PromptPreview({
     await copyToClipboard(text);
   };
 
+  const handleSaveEditedPrompt = (content: string) => {
+    if (!template) return;
+
+    if (onSaveEnhanced) {
+      onSaveEnhanced({
+        ...template,
+        content: preservePlaceholders(
+          decodePlaceholders(content),
+          template.content
+        ),
+      });
+    }
+  };
+
   if (!template) {
     return (
       <Card className="p-4">
@@ -357,6 +371,7 @@ export default function PromptPreview({
         dynamicFields={dynamicFields}
         enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, '')}
         enableEnhancement={enableEnhancement}
+        onSave={handleSaveEditedPrompt}
       />
     </Card>
   );
