@@ -8,11 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEffect } from 'react';
+import { useEffect, KeyboardEvent } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MarkdownPreview } from '@/components/ui/markdown-preview';
 import { MarkdownHelp } from './markdown-help';
+import { Badge } from '@/components/ui/badge';
 
 interface TemplateFormProps {
   template: Template | null;
@@ -26,9 +27,7 @@ const templateFormSchema = z.object({
   isCore: z.boolean(),
   domain: z.enum(templateDomains),
   modelType: z.enum(modelTypes),
-  methodologies: z.array(z.enum(methodologyTypes)),
-  agentEnhanced: z.boolean(),
-  agentType: z.enum(['Architect', 'Developer', 'Tester']).optional()
+  methodologies: z.array(z.enum(methodologyTypes))
 });
 
 type FormData = z.infer<typeof templateFormSchema>;
@@ -42,14 +41,12 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       isCore: template?.isCore || false,
       domain: template?.domain || 'Code',
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
-      methodologies: template?.methodologies || [],
-      agentEnhanced: template?.agentEnhanced || false,
-      agentType: template?.agentType || 'Developer'
+      methodologies: template?.methodologies || []
     },
   });
 
-  const domain = form.watch('domain');
-  const agentEnhanced = form.watch('agentEnhanced');
+  const modelType = form.watch('modelType');
+  const content = form.watch('content');
 
   useEffect(() => {
     if (template) {
@@ -59,9 +56,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
         isCore: template.isCore,
         domain: template.domain,
         modelType: template.modelType,
-        methodologies: template.methodologies,
-        agentEnhanced: template.agentEnhanced || false,
-        agentType: template.agentType || 'Developer'
+        methodologies: template.methodologies
       });
     }
   }, [template, form]);
@@ -70,12 +65,29 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
     onSubmit(data);
   };
 
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    const fieldName = (e.target as HTMLTextAreaElement).name;
+    if (e.key === 'Enter' && fieldName.toLowerCase().includes('content')) {
+      e.preventDefault();
+      form.handleSubmit(handleSubmit)();
+    }
+  };
+
+  const isPromptField = (fieldName: string) => {
+    return fieldName.toLowerCase().includes('content');
+  };
+
   return (
     <Card className="p-6" data-testid="template-form-card">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">
-          {template?.id ? 'Edit Template' : 'Create Template'}
-        </h2>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-xl font-bold">
+            {template?.id ? 'Edit Template' : 'Create Template'}
+          </h2>
+          <Badge variant="outline" className="mt-2">
+            Model: {modelType}
+          </Badge>
+        </div>
         <MarkdownHelp />
       </div>
 
@@ -111,17 +123,23 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       <Textarea
                         {...field}
                         placeholder="Enter template content with {{placeholders}} and markdown formatting"
-                        className="min-h-[200px] font-mono"
+                        className={`min-h-[200px] font-mono resize-y ${isPromptField(field.name) ? 'bg-muted/30' : ''}`}
                         data-testid="template-form-textarea-content"
+                        onKeyDown={handleKeyPress}
                       />
                     </FormControl>
                   </TabsContent>
                   <TabsContent value="preview" className="rounded-md border p-4">
-                    <MarkdownPreview content={field.value} />
+                    <MarkdownPreview content={content} />
                   </TabsContent>
                 </Tabs>
                 <FormDescription>
                   Use markdown syntax for formatting. Click the help icon above for formatting guide.
+                  {isPromptField(field.name) && (
+                    <span className="block mt-1 text-sm text-muted-foreground">
+                      Press Enter to submit prompt for enhancement
+                    </span>
+                  )}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -188,65 +206,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
             />
           </div>
 
-          {/* Agent Enhancement Fields - Show when domain is Code */}
-          {domain === 'Code' && (
-            <>
-              <FormField
-                control={form.control}
-                name="agentEnhanced"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="template-form-checkbox-agent-enhanced"
-                      />
-                    </FormControl>
-                    <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
-                    <FormDescription>
-                      Enable agent-specific enhancements for code generation
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {agentEnhanced && (
-                <FormField
-                  control={form.control}
-                  name="agentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Agent Role</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="template-form-select-agent-type">
-                            <SelectValue placeholder="Select agent role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {['Architect', 'Developer', 'Tester'].map((type) => (
-                            <SelectItem
-                              key={type}
-                              value={type}
-                              data-testid={`template-form-select-agent-type-option-${type.toLowerCase()}`}
-                            >
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select the role this agent should take when enhancing the prompt
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </>
-          )}
 
           <FormField
             control={form.control}
