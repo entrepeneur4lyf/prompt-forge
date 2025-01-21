@@ -31,7 +31,7 @@ export default function TemplateList({
     return templates.filter(template => template.domain === selectedDomain);
   }, [templates, selectedDomain]);
 
-  const getBadgeVariant = (type: 'domain' | 'provider' | 'model' | 'agent', value: string) => {
+  const getBadgeVariant = (type: 'domain' | 'provider' | 'model', value: string) => {
     if (type === 'domain') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Code': 'default',
@@ -51,8 +51,6 @@ export default function TemplateList({
         'Gemini': 'secondary'
       };
       return variants[value] || 'default';
-    } else if (type === 'agent') {
-      return 'default'; // Use default variant for consistent black background
     } else {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Claude-Sonnet-3.5': 'default',
@@ -130,10 +128,11 @@ export default function TemplateList({
                       <Star className="h-5 w-5 flex-shrink-0 text-yellow-500" />
                     )}
                     <span className="font-semibold text-lg">{template.name}</span>
+                    {/* Black circular agent badge */}
                     {template.agentEnhanced && template.agentType !== 'None' && (
                       <Badge 
                         variant="default"
-                        className="bg-black text-white text-xs px-2 py-0.5 rounded-full"
+                        className="bg-black text-white text-xs rounded-full h-6 px-2 flex items-center justify-center"
                         data-testid={`template-list-badge-agent-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
                       >
                         {template.agentType}
