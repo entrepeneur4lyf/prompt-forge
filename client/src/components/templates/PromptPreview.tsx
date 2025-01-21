@@ -13,6 +13,8 @@ import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { encodePlaceholders, decodePlaceholders, preservePlaceholders } from '@/lib/utils';
 import { FullPromptModal } from './FullPromptModal';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface PromptPreviewProps {
   template: Template | null;
@@ -32,6 +34,16 @@ export default function PromptPreview({
   const [showPromptsDialog, setShowPromptsDialog] = useState(false);
   const [showFullPromptModal, setShowFullPromptModal] = useState(false);
   const [composedPrompt, setComposedPrompt] = useState('');
+  const [enableEnhancement, setEnableEnhancement] = useState(() => {
+    const stored = localStorage.getItem('enableEnhancement');
+    return stored === null ? true : JSON.parse(stored);
+  });
+
+  // Save enhancement toggle state
+  const handleEnhancementToggle = (enabled: boolean) => {
+    setEnableEnhancement(enabled);
+    localStorage.setItem('enableEnhancement', JSON.stringify(enabled));
+  };
 
   const enhanceMutation = useMutation({
     mutationFn: enhancePrompt,
@@ -100,9 +112,14 @@ export default function PromptPreview({
 
   const handleEnhance = async () => {
     const basePrompt = generatePrompt();
-    const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, enhancementInstructions);
-    const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
-    enhanceMutation.mutate(fullPrompt);
+    if (enableEnhancement) {
+      const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, enhancementInstructions);
+      const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
+      enhanceMutation.mutate(fullPrompt);
+    } else {
+      // If enhancement is disabled, just use the base prompt
+      enhanceMutation.mutate(basePrompt);
+    }
   };
 
   return (
@@ -159,33 +176,47 @@ export default function PromptPreview({
 
       <div className="space-y-6 mt-8">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold">Enhancement Prompt</h3>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 px-2">
-                  ?
-                </Button>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <p className="text-sm">
-                  This is the instruction prompt that will be used to enhance your template.
-                  You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
-                </p>
-              </HoverCardContent>
-            </HoverCard>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Enhancement Instructions</h3>
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 px-2">
+                    ?
+                  </Button>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                  <p className="text-sm">
+                    This is the instruction prompt that will be used to enhance your template.
+                    You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
+                  </p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="enhance-mode"
+                checked={enableEnhancement}
+                onCheckedChange={handleEnhancementToggle}
+              />
+              <Label htmlFor="enhance-mode">Enable Enhancement</Label>
+            </div>
           </div>
-          <Textarea
-            value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
-            onChange={(e) => setComposedPrompt(e.target.value)}
-            className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
-          />
-          <Input
-            value={enhancementInstructions}
-            onChange={(e) => setEnhancementInstructions(e.target.value)}
-            placeholder="Add specific instructions for enhancement (optional)"
-            className="w-full mt-2"
-          />
+          {enableEnhancement && (
+            <>
+              <Textarea
+                value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
+                onChange={(e) => setComposedPrompt(e.target.value)}
+                className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
+              />
+              <Input
+                value={enhancementInstructions}
+                onChange={(e) => setEnhancementInstructions(e.target.value)}
+                placeholder="Add specific instructions for enhancement (optional)"
+                className="w-full mt-2"
+              />
+            </>
+          )}
         </div>
 
         <div>
@@ -254,7 +285,7 @@ export default function PromptPreview({
           ) : (
             <Wand2 className="mr-2 h-4 w-4" />
           )}
-          Enhance
+          {enableEnhancement ? 'Enhance' : 'Process'}
         </Button>
       </div>
 
