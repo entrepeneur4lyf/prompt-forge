@@ -56,10 +56,22 @@ export default function PromptPreview({
     },
   });
 
-  const handleSubmit = useCallback((e?: React.FormEvent) => {
+  const handleEnhance = async () => {
+    if (!template) return;
+
+    const basePrompt = generatePrompt();
+    const promptToSend = enableEnhancement
+      ? `${composedPrompt || generateEnhancementPrompt(template, '')}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
+      : basePrompt;
+
+    console.log('Sending prompt:', promptToSend); // Debug log
+    enhanceMutation.mutate(promptToSend);
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     handleEnhance();
-  }, []);
+  };
 
   const clearAll = () => {
     onDynamicFieldsChange([]);
@@ -90,11 +102,10 @@ export default function PromptPreview({
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      handleEnhance();
     }
   };
 
-  // Format field name to title case
   const formatFieldName = (name: string) => {
     return name
       .split(/(?=[A-Z])|_|\s/)
@@ -108,18 +119,6 @@ export default function PromptPreview({
       prompt = prompt.replace(`{{${field.name}}}`, field.value);
     });
     return prompt;
-  };
-
-  const handleEnhance = async () => {
-    if (!template) return;
-
-    const basePrompt = generatePrompt();
-    const promptToSend = enableEnhancement
-      ? `${composedPrompt || generateEnhancementPrompt(template, '')}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
-      : basePrompt;
-
-    console.log('Sending prompt:', promptToSend); // Debug log
-    enhanceMutation.mutate(promptToSend);
   };
 
   if (!template) {
