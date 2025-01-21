@@ -266,8 +266,8 @@ export default function TemplateList({
   };
 
   return (
-    <Card className="p-6" data-testid="template-list-card">
-      <div className="space-y-5">
+    <Card className="flex flex-col h-[calc(100vh-12rem)]" data-testid="template-list-card">
+      <div className="p-6 space-y-5 flex-1 flex flex-col">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-foreground">Templates</h2>
           <Select value={selectedDomain} onValueChange={setSelectedDomain}>
@@ -297,7 +297,7 @@ export default function TemplateList({
           </Select>
         </div>
 
-        <ScrollArea className="h-[500px] pr-4">
+        <ScrollArea className="flex-1 pr-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
