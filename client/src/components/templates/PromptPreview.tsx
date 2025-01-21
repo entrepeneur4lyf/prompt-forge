@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, X } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, X, RotateCcw } from 'lucide-react';
 import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
 import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -73,7 +73,15 @@ export default function PromptPreview({
     enhanceMutation.reset();
     toast({
       title: 'Cleared',
-      description: 'Generated prompt has been cleared',
+      description: 'Enhanced prompt has been cleared',
+    });
+  };
+
+  const resetToOriginal = () => {
+    onDynamicFieldsChange([]);
+    toast({
+      title: 'Reset',
+      description: 'Prompt reset to original template',
     });
   };
 
@@ -169,14 +177,16 @@ export default function PromptPreview({
             <X className="mr-2 h-4 w-4" />
             Clear All
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearGenerated}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Clear Generated
-          </Button>
+          {enhanceMutation.data && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearGenerated}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear Enhanced
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -274,9 +284,19 @@ export default function PromptPreview({
         </div>
 
         <div>
-          <label className="text-sm font-medium mb-2 block">
-            Generated Prompt
-          </label>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold">{enableEnhancement ? 'Enhanced' : 'Generated'} Prompt</h3>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToOriginal}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset to Original
+              </Button>
+            </div>
+          </div>
           <div className="relative bg-muted p-4 rounded-lg min-h-[120px]">
             <Button
               variant="ghost"
@@ -295,9 +315,9 @@ export default function PromptPreview({
         {enhanceMutation.data && (
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-semibold">
-                Enhanced Prompt
-              </label>
+              <h3 className="text-lg font-semibold">
+                {enableEnhancement ? 'Enhanced' : 'Generated'} Output
+              </h3>
               {onSaveEnhanced && (
                 <Button
                   variant="outline"
