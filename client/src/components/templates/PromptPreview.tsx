@@ -1,22 +1,23 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Template, DynamicField } from '@/lib/types';
+import { Template } from '@/lib/types';
 import { enhancePrompt } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2, Save } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2, Save, Maximize2 } from 'lucide-react';
 import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
 import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { encodePlaceholders, decodePlaceholders, preservePlaceholders } from '@/lib/utils';
+import { FullPromptModal } from './FullPromptModal';
 
 interface PromptPreviewProps {
   template: Template | null;
-  dynamicFields: DynamicField[];
-  onDynamicFieldsChange: (fields: DynamicField[]) => void;
+  dynamicFields: Array<{ name: string; value: string }>;
+  onDynamicFieldsChange: (fields: Array<{ name: string; value: string }>) => void;
   onSaveEnhanced?: (template: Template) => void;
 }
 
@@ -29,6 +30,7 @@ export default function PromptPreview({
   const { toast } = useToast();
   const [enhancementInstructions, setEnhancementInstructions] = useState('');
   const [showPromptsDialog, setShowPromptsDialog] = useState(false);
+  const [showFullPromptModal, setShowFullPromptModal] = useState(false);
   const [composedPrompt, setComposedPrompt] = useState('');
 
   const enhanceMutation = useMutation({
@@ -107,14 +109,24 @@ export default function PromptPreview({
     <Card className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Preview</h2>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setShowPromptsDialog(true)}
-        >
-          <Settings2 className="mr-2 h-4 w-4" />
-          Enhancement Prompts
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowFullPromptModal(true)}
+          >
+            <Maximize2 className="mr-2 h-4 w-4" />
+            View Full Prompt
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowPromptsDialog(true)}
+          >
+            <Settings2 className="mr-2 h-4 w-4" />
+            Enhancement Prompts
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -249,6 +261,14 @@ export default function PromptPreview({
       <EnhancementPromptsDialog 
         open={showPromptsDialog}
         onClose={() => setShowPromptsDialog(false)}
+      />
+
+      <FullPromptModal
+        open={showFullPromptModal}
+        onClose={() => setShowFullPromptModal(false)}
+        template={template}
+        dynamicFields={dynamicFields}
+        enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
       />
     </Card>
   );
