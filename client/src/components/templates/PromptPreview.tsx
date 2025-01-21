@@ -64,7 +64,6 @@ export default function PromptPreview({
       ? `${composedPrompt || generateEnhancementPrompt(template, '')}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
       : basePrompt;
 
-    console.log('Sending prompt:', promptToSend); // Debug log
     enhanceMutation.mutate(promptToSend);
   };
 
@@ -119,6 +118,12 @@ export default function PromptPreview({
         variant: 'destructive',
       });
     }
+  };
+
+  // Prevent generation when copying
+  const handleCopy = async (text: string) => {
+    if (!text) return;
+    await copyToClipboard(text);
   };
 
   if (!template) {
@@ -218,7 +223,7 @@ export default function PromptPreview({
           );
         })}
 
-        <div className="space-y-6 mt-8">
+        <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -273,7 +278,7 @@ export default function PromptPreview({
                 variant="ghost"
                 size="icon"
                 className="absolute top-2 right-2 h-8 w-8"
-                onClick={() => copyToClipboard(generatePrompt())}
+                onClick={() => handleCopy(generatePrompt())}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -311,7 +316,7 @@ export default function PromptPreview({
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8"
-                  onClick={() => copyToClipboard(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
+                  onClick={() => handleCopy(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
