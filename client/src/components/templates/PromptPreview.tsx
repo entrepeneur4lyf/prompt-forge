@@ -50,8 +50,8 @@ export default function PromptPreview({
     onError: (error) => {
       toast({
         title: 'Error',
-        description: error instanceof Error 
-          ? error.message 
+        description: error instanceof Error
+          ? error.message
           : 'Failed to enhance prompt. Check your API key in settings.',
         variant: 'destructive',
       });
@@ -127,16 +127,16 @@ export default function PromptPreview({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Preview</h2>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => setShowFullPromptModal(true)}
           >
             <Maximize2 className="mr-2 h-4 w-4" />
             View Full Prompt
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => setShowPromptsDialog(true)}
           >
@@ -265,10 +265,10 @@ export default function PromptPreview({
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <div 
+              <div
                 className="whitespace-pre-wrap pt-8"
-                dangerouslySetInnerHTML={{ 
-                  __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt) 
+                dangerouslySetInnerHTML={{
+                  __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt)
                 }}
               />
             </div>
@@ -289,7 +289,7 @@ export default function PromptPreview({
         </Button>
       </div>
 
-      <EnhancementPromptsDialog 
+      <EnhancementPromptsDialog
         open={showPromptsDialog}
         onClose={() => setShowPromptsDialog(false)}
       />
@@ -300,6 +300,7 @@ export default function PromptPreview({
         template={template}
         dynamicFields={dynamicFields}
         enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
+        enableEnhancement={enableEnhancement}
       />
     </Card>
   );
