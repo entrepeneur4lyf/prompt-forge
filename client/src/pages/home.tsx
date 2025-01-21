@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -18,6 +19,7 @@ export default function Home() {
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [dynamicFields, setDynamicFields] = useState<Array<{ name: string; value: string }>>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState('templates');
 
   const { data: templates = [], isLoading, error } = useQuery({
     queryKey: ['/api/templates'],
@@ -33,6 +35,7 @@ export default function Home() {
         description: 'Template created successfully',
       });
       setEditingTemplate(null);
+      setActiveTab('templates');
     },
     onError: (error) => {
       toast({
@@ -52,6 +55,7 @@ export default function Home() {
         description: 'Template updated successfully',
       });
       setEditingTemplate(null);
+      setActiveTab('templates');
     },
     onError: (error) => {
       toast({
@@ -102,7 +106,10 @@ export default function Home() {
         <h1 className="text-3xl font-bold">Prompt Template Manager</h1>
         <div className="flex gap-2">
           <Button 
-            onClick={() => setEditingTemplate({} as Template)} 
+            onClick={() => {
+              setEditingTemplate({} as Template);
+              setActiveTab('create-edit');
+            }} 
             data-testid="template-create-button"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -121,24 +128,39 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <TemplateList 
-            templates={templates}
-            selectedTemplate={selectedTemplate}
-            onSelect={setSelectedTemplate}
-            onEdit={(template) => {
-              setSelectedTemplate(null);
-              setEditingTemplate(template);
-            }}
-            onDelete={(id) => deleteMutation.mutate(id)}
-          />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="templates" className="flex-1">Templates</TabsTrigger>
+              <TabsTrigger value="create-edit" className="flex-1">
+                {editingTemplate?.id ? 'Edit Template' : 'Create Template'}
+              </TabsTrigger>
+            </TabsList>
 
-          {editingTemplate && (
-            <TemplateForm
-              template={editingTemplate}
-              onSubmit={handleSubmit}
-              onCancel={() => setEditingTemplate(null)}
-            />
-          )}
+            <TabsContent value="templates">
+              <TemplateList 
+                templates={templates}
+                selectedTemplate={selectedTemplate}
+                onSelect={setSelectedTemplate}
+                onEdit={(template) => {
+                  setSelectedTemplate(null);
+                  setEditingTemplate(template);
+                  setActiveTab('create-edit');
+                }}
+                onDelete={(id) => deleteMutation.mutate(id)}
+              />
+            </TabsContent>
+
+            <TabsContent value="create-edit">
+              <TemplateForm
+                template={editingTemplate}
+                onSubmit={handleSubmit}
+                onCancel={() => {
+                  setEditingTemplate(null);
+                  setActiveTab('templates');
+                }}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div>

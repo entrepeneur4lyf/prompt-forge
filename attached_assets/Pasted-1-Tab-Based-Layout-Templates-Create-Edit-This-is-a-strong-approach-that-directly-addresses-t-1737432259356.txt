@@ -1,0 +1,39 @@
+1. Tab-Based Layout (Templates / Create & Edit)
+
+This is a strong approach that directly addresses the imbalance and provides a clear separation of concerns.
+
+Implementation:
+
+Create two tabs: "Templates" and "Create/Edit".
+The "Templates" tab would contain the current list of templates.
+The "Create/Edit" tab would house the form for creating new templates and, when editing an existing template, would dynamically populate with that template's data.
+Clicking the "edit" icon next to a template would switch to the "Create/Edit" tab and load the template data into the form.
+"New Template" button in the top right would also switch to "Create/Edit" tab.
+Benefits:
+
+Improved Balance: Distributes the content more evenly across the screen.
+Clearer Workflow: Separates the actions of browsing/selecting templates from creating/editing them.
+Reduced Clutter: Hides the form when not in use, making the "Templates" view cleaner.
+Visual Example:
+
+-----------------------------------------------------------------------------------
+| Prompt Template Manager                | New Template | Settings |
+-----------------------------------------------------------------------------------
+| [ Templates ] [ Create/Edit ]                                                  |
+|----------------------------------------------------------------------------------|
+| | Templates List (with search/filter) |                                          |
+| | - Template 1 (with model/agent info)  [Edit Icon]                             |
+| | - Template 2 (with model/agent info)  [Edit Icon]                             |
+| | ...                                  |                                          |
+|----------------------------------------------------------------------------------|
+(When "Create/Edit" tab is active)
+ _________________________________________________________________________________
+| [ Templates ] [ Create/Edit ]                                                  |
+|----------------------------------------------------------------------------------|
+|                                         |                                          |
+|  Name: [___________________________]   |                                          |
+|                                         |                                          |
+|  Content:                             |  Preview:                                |
+|  [ Edit Area (Markdown Editor) ]       |  [ Rendered Markdown Preview ]           |
+|                                         |                                          |
+|----------------------------------------------------------------------------------|
