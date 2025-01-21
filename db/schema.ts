@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from 'zod';
 
@@ -36,6 +36,7 @@ export const templates = pgTable("templates", {
   methodologies: text("methodologies").array().notNull().default([]),
   agentEnhanced: boolean("agent_enhanced").default(false).notNull(),
   agentType: text("agent_type").default('Developer'),
+  order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

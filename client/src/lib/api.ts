@@ -40,6 +40,21 @@ export async function updateTemplate(template: UpdateTemplateInput): Promise<Tem
   return res.json();
 }
 
+export async function reorderTemplates(templates: Template[]): Promise<Template[]> {
+  const reorderedTemplates = templates.map((template, index) => ({
+    id: template.id,
+    order: index
+  }));
+
+  const res = await fetch(`${API_BASE}/templates/reorder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(reorderedTemplates)
+  });
+  if (!res.ok) throw new Error('Failed to reorder templates');
+  return res.json();
+}
+
 export async function deleteTemplate(id: number): Promise<void> {
   const res = await fetch(`${API_BASE}/templates/${id}`, {
     method: 'DELETE'

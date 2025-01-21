@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTemplates, createTemplate, updateTemplate, deleteTemplate, duplicateTemplate } from '@/lib/api';
+import { getTemplates, createTemplate, updateTemplate, deleteTemplate, duplicateTemplate, reorderTemplates } from '@/lib/api';
 import { Template } from '@/lib/types';
 import TemplateList from '@/components/templates/TemplateList';
 import TemplateForm from '@/components/templates/TemplateForm';
@@ -106,6 +106,25 @@ export default function Home() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: reorderTemplates,
+    onSuccess: (data) => {
+      queryClient.setQueryData(['/api/templates'], data);
+      toast({
+        title: 'Success',
+        description: 'Template order updated successfully',
+      });
+    },
+    onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update template order',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleSubmit = (template: Partial<Template>) => {
     if (editingTemplate?.id) {
       updateMutation.mutate({ ...template, id: editingTemplate.id } as Template);
@@ -175,6 +194,7 @@ export default function Home() {
                 }}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 onDuplicate={(template) => duplicateMutation.mutate(template)}
+                onReorder={(reorderedTemplates) => reorderMutation.mutate(reorderedTemplates)}
               />
             </TabsContent>
 

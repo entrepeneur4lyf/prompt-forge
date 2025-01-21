@@ -10,7 +10,7 @@ export function registerRoutes(app: Express): Server {
     console.log("GET /api/templates - Starting request");
     try {
       console.log("Executing Drizzle query to fetch templates...");
-      const allTemplates = await db.select().from(templates);
+      const allTemplates = await db.select().from(templates).orderBy(templates.order);
       console.log("Query successful, found", allTemplates.length, "templates");
       res.json(allTemplates);
     } catch (error) {
@@ -25,9 +25,17 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/templates", async (req, res) => {
     try {
+      // Get max order and add new template at the end
+      const maxOrder = await db.select({ order: templates.order })
+        .from(templates)
+        .orderBy(templates.order)
+        .limit(1);
+
+      const order = maxOrder.length > 0 ? maxOrder[0].order + 1 : 0;
+
       const [template] = await db
         .insert(templates)
-        .values(req.body)
+        .values({ ...req.body, order })
         .returning();
       res.json(template);
     } catch (error) {
@@ -51,6 +59,33 @@ export function registerRoutes(app: Express): Server {
       console.error("Error updating template:", error);
       res.status(500).json({ 
         message: "Failed to update template",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  app.post("/api/templates/reorder", async (req, res) => {
+    try {
+      const orderedTemplates = req.body as { id: number; order: number }[];
+
+      // Update each template's order in a transaction
+      await db.transaction(async (tx) => {
+        for (const { id, order } of orderedTemplates) {
+          await tx.update(templates)
+            .set({ order, updatedAt: new Date() })
+            .where(eq(templates.id, id));
+        }
+      });
+
+      const updatedTemplates = await db.select()
+        .from(templates)
+        .orderBy(templates.order);
+
+      res.json(updatedTemplates);
+    } catch (error) {
+      console.error("Error reordering templates:", error);
+      res.status(500).json({
+        message: "Failed to reorder templates",
         details: error instanceof Error ? error.message : String(error)
       });
     }
