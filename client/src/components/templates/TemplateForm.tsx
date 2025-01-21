@@ -29,7 +29,7 @@ const templateFormSchema = z.object({
   modelType: z.enum(modelTypes),
   roleType: z.enum(roleTypes),
   methodologies: z.array(z.enum(methodologyTypes)),
-  agentEnhanced: z.boolean().optional(),
+  agentEnhanced: z.boolean(),
   agentType: z.enum(['None', 'Architect', 'Developer', 'Tester']).optional()
 });
 
@@ -66,8 +66,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
         modelType: template.modelType,
         roleType: template.roleType,
         methodologies: template.methodologies,
-        agentEnhanced: template.agentEnhanced,
-        agentType: template.agentType
+        agentEnhanced: template.agentEnhanced || false,
+        agentType: template.agentType || 'None'
       });
     }
   }, [template, form]);
@@ -164,8 +164,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               )}
             />
 
-            {/* Agent Enhancement Fields - Only show when domain is Meta */}
-            {domain === 'Meta' && (
+            {/* Agent Enhancement Fields - Show when domain is Code */}
+            {domain === 'Code' && (
               <>
                 <FormField
                   control={form.control}
@@ -181,7 +181,7 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                       </FormControl>
                       <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
                       <FormDescription>
-                        Enable agent-specific instructions
+                        Enable agent-specific enhancements for code generation
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -194,15 +194,15 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                     name="agentType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Agent Type</FormLabel>
+                        <FormLabel>Agent Role</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="template-form-select-agent-type">
-                              <SelectValue placeholder="Select agent type" />
+                              <SelectValue placeholder="Select agent role" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {['None', 'Architect', 'Developer', 'Tester'].map((type) => (
+                            {['Architect', 'Developer', 'Tester'].map((type) => (
                               <SelectItem
                                 key={type}
                                 value={type}
@@ -213,6 +213,9 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormDescription>
+                          Select the role this agent should take when enhancing the prompt
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
