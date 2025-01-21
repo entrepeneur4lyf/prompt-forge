@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Template, templateDomains, modelTypes, roleTypes, methodologyTypes, providerTypes } from '@/lib/types';
+import { Template, templateDomains, modelTypes, methodologyTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,10 @@ const templateFormSchema = z.object({
   content: z.string().min(1, "Content is required"),
   isCore: z.boolean(),
   domain: z.enum(templateDomains),
-  providerType: z.enum(providerTypes),
   modelType: z.enum(modelTypes),
-  roleType: z.enum(roleTypes),
   methodologies: z.array(z.enum(methodologyTypes)),
   agentEnhanced: z.boolean(),
-  agentType: z.enum(['None', 'Architect', 'Developer', 'Tester']).optional()
+  agentType: z.enum(['Architect', 'Developer', 'Tester']).optional()
 });
 
 type FormData = z.infer<typeof templateFormSchema>;
@@ -43,12 +41,10 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       content: template?.content || '',
       isCore: template?.isCore || false,
       domain: template?.domain || 'Code',
-      providerType: template?.providerType || 'Anthropic',
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
-      roleType: template?.roleType || 'None',
       methodologies: template?.methodologies || [],
       agentEnhanced: template?.agentEnhanced || false,
-      agentType: template?.agentType || 'None'
+      agentType: template?.agentType || 'Developer'
     },
   });
 
@@ -62,12 +58,10 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
         content: template.content,
         isCore: template.isCore,
         domain: template.domain,
-        providerType: template.providerType,
         modelType: template.modelType,
-        roleType: template.roleType,
         methodologies: template.methodologies,
         agentEnhanced: template.agentEnhanced || false,
-        agentType: template.agentType || 'None'
+        agentType: template.agentType || 'Developer'
       });
     }
   }, [template, form]);
@@ -164,95 +158,6 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
               )}
             />
 
-            {/* Agent Enhancement Fields - Show when domain is Code */}
-            {domain === 'Code' && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="agentEnhanced"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          data-testid="template-form-checkbox-agent-enhanced"
-                        />
-                      </FormControl>
-                      <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
-                      <FormDescription>
-                        Enable agent-specific enhancements for code generation
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {agentEnhanced && (
-                  <FormField
-                    control={form.control}
-                    name="agentType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Agent Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="template-form-select-agent-type">
-                              <SelectValue placeholder="Select agent role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {['Architect', 'Developer', 'Tester'].map((type) => (
-                              <SelectItem
-                                key={type}
-                                value={type}
-                                data-testid={`template-form-select-agent-type-option-${type.toLowerCase()}`}
-                              >
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select the role this agent should take when enhancing the prompt
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </>
-            )}
-
-            <FormField
-              control={form.control}
-              name="providerType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Provider</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="template-form-select-provider">
-                        <SelectValue placeholder="Select provider" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {providerTypes.map((provider) => (
-                        <SelectItem
-                          key={provider}
-                          value={provider}
-                          data-testid={`template-form-select-provider-option-${provider.toLowerCase()}`}
-                        >
-                          {provider}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="modelType"
@@ -281,36 +186,67 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="roleType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="template-form-select-role">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roleTypes.map((role) => (
-                        <SelectItem
-                          key={role}
-                          value={role}
-                          data-testid={`template-form-select-role-option-${role.toLowerCase()}`}
-                        >
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
+
+          {/* Agent Enhancement Fields - Show when domain is Code */}
+          {domain === 'Code' && (
+            <>
+              <FormField
+                control={form.control}
+                name="agentEnhanced"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="template-form-checkbox-agent-enhanced"
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
+                    <FormDescription>
+                      Enable agent-specific enhancements for code generation
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {agentEnhanced && (
+                <FormField
+                  control={form.control}
+                  name="agentType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agent Role</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="template-form-select-agent-type">
+                            <SelectValue placeholder="Select agent role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {['Architect', 'Developer', 'Tester'].map((type) => (
+                            <SelectItem
+                              key={type}
+                              value={type}
+                              data-testid={`template-form-select-agent-type-option-${type.toLowerCase()}`}
+                            >
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Select the role this agent should take when enhancing the prompt
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </>
+          )}
 
           <FormField
             control={form.control}

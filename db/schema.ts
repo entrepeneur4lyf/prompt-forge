@@ -3,7 +3,6 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from 'zod';
 
 export const templateDomains = ['Code', 'General', 'Marketing', 'Education', 'Creative Writing', 'Meta'] as const;
-export const providerTypes = ['OpenAI', 'Anthropic', 'Replit', 'Deepseek', 'Gemini'] as const;
 export const modelTypes = [
   'Claude-Sonnet-3.5',
   'GPT-3.5-Turbo',
@@ -17,7 +16,6 @@ export const modelTypes = [
   'Deepseek-Coder',
   'Gemini-Pro'
 ] as const;
-export const roleTypes = ['None', 'Architect', 'Developer', 'Tester'] as const;
 export const methodologyTypes = [
   'TDD',
   'BDD',
@@ -34,12 +32,10 @@ export const templates = pgTable("templates", {
   content: text("content").notNull(),
   isCore: boolean("is_core").default(false).notNull(),
   domain: text("domain", { enum: templateDomains }).default('Code').notNull(),
-  providerType: text("provider_type", { enum: providerTypes }).default('Anthropic').notNull(),
   modelType: text("model_type", { enum: modelTypes }).default('Claude-Sonnet-3.5').notNull(),
-  roleType: text("role_type", { enum: roleTypes }).default('None').notNull(),
   methodologies: text("methodologies").array().notNull().default([]),
   agentEnhanced: boolean("agent_enhanced").default(false).notNull(),
-  agentType: text("agent_type", { enum: roleTypes }).default('None').notNull(),
+  agentType: text("agent_type").default('Developer'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
