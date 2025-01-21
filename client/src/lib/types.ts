@@ -39,7 +39,8 @@ export interface Template {
   domain: TemplateDomain;
   providerType: ProviderType;
   modelType: ModelType;
-  roleType: RoleType;
+  agentEnhanced: boolean;
+  agentType: RoleType;
   methodologies: MethodologyType[];
   createdAt: string;
   updatedAt: string;
@@ -52,7 +53,8 @@ export interface CreateTemplateInput {
   domain: TemplateDomain;
   providerType: ProviderType;
   modelType: ModelType;
-  roleType: RoleType;
+  agentEnhanced: boolean;
+  agentType: RoleType;
   methodologies: MethodologyType[];
 }
 

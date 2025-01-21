@@ -31,7 +31,7 @@ export default function TemplateList({
     return templates.filter(template => template.domain === selectedDomain);
   }, [templates, selectedDomain]);
 
-  const getBadgeVariant = (type: 'domain' | 'provider' | 'model', value: string) => {
+  const getBadgeVariant = (type: 'domain' | 'provider' | 'model' | 'agent', value: string) => {
     if (type === 'domain') {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Code': 'default',
@@ -51,6 +51,8 @@ export default function TemplateList({
         'Gemini': 'secondary'
       };
       return variants[value] || 'default';
+    } else if (type === 'agent') {
+      return 'outline'; // Use outline variant for agent badges
     } else {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Claude-Sonnet-3.5': 'default',
@@ -169,6 +171,15 @@ export default function TemplateList({
                       data-testid={`template-list-badge-model-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       {template.modelType}
+                    </Badge>
+                  )}
+                  {template.agentEnhanced && template.agentType !== 'None' && (
+                    <Badge 
+                      variant={getBadgeVariant('agent', template.agentType)}
+                      className="bg-black text-white"
+                      data-testid={`template-list-badge-agent-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      {template.agentType}
                     </Badge>
                   )}
                 </div>

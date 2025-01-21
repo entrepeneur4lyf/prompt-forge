@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Template, templateDomains, modelTypes, methodologyTypes } from '@/lib/types';
+import { Template, templateDomains, modelTypes, methodologyTypes, roleTypes } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,9 @@ const templateFormSchema = z.object({
   isCore: z.boolean(),
   domain: z.enum(templateDomains),
   modelType: z.enum(modelTypes),
-  methodologies: z.array(z.enum(methodologyTypes))
+  methodologies: z.array(z.enum(methodologyTypes)),
+  agentEnhanced: z.boolean(),
+  agentType: z.enum(roleTypes)
 });
 
 type FormData = z.infer<typeof templateFormSchema>;
@@ -41,12 +43,15 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
       isCore: template?.isCore || false,
       domain: template?.domain || 'Code',
       modelType: template?.modelType || 'Claude-Sonnet-3.5',
-      methodologies: template?.methodologies || []
+      methodologies: template?.methodologies || [],
+      agentEnhanced: template?.agentEnhanced || false,
+      agentType: template?.agentType || 'None'
     },
   });
 
   const modelType = form.watch('modelType');
   const content = form.watch('content');
+  const agentEnhanced = form.watch('agentEnhanced');
 
   useEffect(() => {
     if (template) {
@@ -56,7 +61,9 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
         isCore: template.isCore,
         domain: template.domain,
         modelType: template.modelType,
-        methodologies: template.methodologies
+        methodologies: template.methodologies,
+        agentEnhanced: template.agentEnhanced,
+        agentType: template.agentType
       });
     }
   }, [template, form]);
@@ -149,63 +156,115 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="domain"
+              name="agentEnhanced"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Domain</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="template-form-select-domain">
-                        <SelectValue placeholder="Select domain" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {templateDomains.map((domain) => (
-                        <SelectItem
-                          key={domain}
-                          value={domain}
-                          data-testid={`template-form-select-domain-option-${domain.toLowerCase()}`}
-                        >
-                          {domain}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <FormItem className="flex items-center gap-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="template-form-checkbox-agent-enhanced"
+                    />
+                  </FormControl>
+                  <FormLabel className="!mt-0">Agent Enhanced</FormLabel>
+                  <FormDescription>
+                    Enable agent role-based enhancement
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="modelType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Model</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="template-form-select-model">
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {modelTypes.map((model) => (
-                        <SelectItem
-                          key={model}
-                          value={model}
-                          data-testid={`template-form-select-model-option-${model.toLowerCase().replace(/\./g, '-')}`}
-                        >
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {agentEnhanced && (
+              <FormField
+                control={form.control}
+                name="agentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agent Role</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="template-form-select-agent-type">
+                          <SelectValue placeholder="Select agent role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {roleTypes.map((role) => (
+                          <SelectItem
+                            key={role}
+                            value={role}
+                            data-testid={`template-form-select-agent-type-option-${role.toLowerCase()}`}
+                          >
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
+
+          <FormField
+            control={form.control}
+            name="domain"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Domain</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="template-form-select-domain">
+                      <SelectValue placeholder="Select domain" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {templateDomains.map((domain) => (
+                      <SelectItem
+                        key={domain}
+                        value={domain}
+                        data-testid={`template-form-select-domain-option-${domain.toLowerCase()}`}
+                      >
+                        {domain}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="modelType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Model</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="template-form-select-model">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {modelTypes.map((model) => (
+                      <SelectItem
+                        key={model}
+                        value={model}
+                        data-testid={`template-form-select-model-option-${model.toLowerCase().replace(/\./g, '-')}`}
+                      >
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
@@ -232,8 +291,8 @@ export default function TemplateForm({ template, onSubmit, onCancel }: TemplateF
                                   return checked
                                     ? field.onChange([...field.value, methodology])
                                     : field.onChange(
-                                      field.value?.filter((value) => value !== methodology)
-                                    );
+                                        field.value?.filter((value) => value !== methodology)
+                                      );
                                 }}
                                 data-testid={`template-form-checkbox-methodology-${methodology.toLowerCase()}`}
                               />
