@@ -1,25 +1,44 @@
-import { useState, useCallback, KeyboardEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Template } from '@/lib/types';
-import { enhancePrompt } from '@/lib/api';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, RotateCcw } from 'lucide-react';
-import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
-import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { encodePlaceholders, decodePlaceholders, preservePlaceholders } from '@/lib/utils';
-import { FullPromptModal } from './FullPromptModal';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { useState, useCallback, KeyboardEvent } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Template } from "@/lib/types";
+import { enhancePrompt } from "@/lib/api";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Copy,
+  Wand2,
+  Loader2,
+  Settings2,
+  Save,
+  Maximize2,
+  RotateCcw,
+} from "lucide-react";
+import { generateEnhancementPrompt } from "@/lib/defaultPrompts";
+import EnhancementPromptsDialog from "../settings/EnhancementPromptsDialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  encodePlaceholders,
+  decodePlaceholders,
+  preservePlaceholders,
+} from "@/lib/utils";
+import { FullPromptModal } from "./FullPromptModal";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface PromptPreviewProps {
   template: Template | null;
   dynamicFields: Array<{ name: string; value: string }>;
-  onDynamicFieldsChange: (fields: Array<{ name: string; value: string }>) => void;
+  onDynamicFieldsChange: (
+    fields: Array<{ name: string; value: string }>,
+  ) => void;
   onSaveEnhanced?: (template: Template) => void;
 }
 
@@ -32,26 +51,27 @@ export default function PromptPreview({
   const { toast } = useToast();
   const [showPromptsDialog, setShowPromptsDialog] = useState(false);
   const [showFullPromptModal, setShowFullPromptModal] = useState(false);
-  const [composedPrompt, setComposedPrompt] = useState('');
+  const [composedPrompt, setComposedPrompt] = useState("");
   const [enableEnhancement, setEnableEnhancement] = useState(() => {
-    const stored = localStorage.getItem('enableEnhancement');
+    const stored = localStorage.getItem("enableEnhancement");
     return stored === null ? true : JSON.parse(stored);
   });
 
   const handleEnhancementToggle = (enabled: boolean) => {
     setEnableEnhancement(enabled);
-    localStorage.setItem('enableEnhancement', JSON.stringify(enabled));
+    localStorage.setItem("enableEnhancement", JSON.stringify(enabled));
   };
 
   const enhanceMutation = useMutation({
     mutationFn: enhancePrompt,
     onError: (error) => {
       toast({
-        title: 'Error',
-        description: error instanceof Error
-          ? error.message
-          : 'Failed to enhance prompt. Check your API key in settings.',
-        variant: 'destructive',
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to enhance prompt. Check your API key in settings.",
+        variant: "destructive",
       });
     },
   });
@@ -61,7 +81,7 @@ export default function PromptPreview({
 
     const basePrompt = generatePrompt();
     const promptToSend = enableEnhancement
-      ? `${composedPrompt || generateEnhancementPrompt(template, '')}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
+      ? `${composedPrompt || generateEnhancementPrompt(template, "")}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
       : basePrompt;
 
     enhanceMutation.mutate(promptToSend);
@@ -72,8 +92,10 @@ export default function PromptPreview({
     handleEnhance();
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyPress = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleEnhance();
     }
@@ -83,20 +105,20 @@ export default function PromptPreview({
     onDynamicFieldsChange([]);
     enhanceMutation.reset();
     toast({
-      title: 'Reset',
-      description: 'Prompt reset to original template',
+      title: "Reset",
+      description: "Prompt reset to original template",
     });
   };
 
   const formatFieldName = (name: string) => {
     return name
       .split(/(?=[A-Z])|_|\s/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   const generatePrompt = () => {
-    let prompt = template?.content || '';
+    let prompt = template?.content || "";
     dynamicFields.forEach((field) => {
       prompt = prompt.replace(`{{${field.name}}}`, field.value);
     });
@@ -108,14 +130,14 @@ export default function PromptPreview({
     try {
       await navigator.clipboard.writeText(text);
       toast({
-        title: 'Copied',
-        description: 'Content copied to clipboard',
+        title: "Copied",
+        description: "Content copied to clipboard",
       });
     } catch (err) {
       toast({
-        title: 'Error',
-        description: 'Failed to copy to clipboard',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
       });
     }
   };
@@ -134,7 +156,7 @@ export default function PromptPreview({
         ...template,
         content: preservePlaceholders(
           decodePlaceholders(content),
-          template.content
+          template.content,
         ),
       });
     }
@@ -152,12 +174,12 @@ export default function PromptPreview({
 
   const placeholders = Array.from(
     template.content.matchAll(/\{\{([^}]+)\}\}/g),
-    (m) => m[1]
+    (m) => m[1],
   );
 
   const isPromptField = (fieldName: string) => {
     const name = fieldName.toLowerCase();
-    return name.includes('prompt') || name === 'content';
+    return name.includes("prompt") || name === "content";
   };
 
   return (
@@ -192,20 +214,31 @@ export default function PromptPreview({
 
           return (
             <div key={placeholder}>
-              <Label htmlFor={fieldId} className="text-sm font-medium mb-2 block">
+              <Label
+                htmlFor={fieldId}
+                className="text-sm font-medium mb-2 block"
+              >
                 {formatFieldName(placeholder)}
               </Label>
               {isPromptInput ? (
                 <Textarea
                   id={fieldId}
-                  value={field?.value || ''}
+                  value={field?.value || ""}
                   onChange={(e) => {
                     const newFields = [...dynamicFields];
-                    const index = newFields.findIndex((f) => f.name === placeholder);
+                    const index = newFields.findIndex(
+                      (f) => f.name === placeholder,
+                    );
                     if (index >= 0) {
-                      newFields[index] = { name: placeholder, value: e.target.value };
+                      newFields[index] = {
+                        name: placeholder,
+                        value: e.target.value,
+                      };
                     } else {
-                      newFields.push({ name: placeholder, value: e.target.value });
+                      newFields.push({
+                        name: placeholder,
+                        value: e.target.value,
+                      });
                     }
                     onDynamicFieldsChange(newFields);
                   }}
@@ -217,14 +250,22 @@ export default function PromptPreview({
               ) : (
                 <Input
                   id={fieldId}
-                  value={field?.value || ''}
+                  value={field?.value || ""}
                   onChange={(e) => {
                     const newFields = [...dynamicFields];
-                    const index = newFields.findIndex((f) => f.name === placeholder);
+                    const index = newFields.findIndex(
+                      (f) => f.name === placeholder,
+                    );
                     if (index >= 0) {
-                      newFields[index] = { name: placeholder, value: e.target.value };
+                      newFields[index] = {
+                        name: placeholder,
+                        value: e.target.value,
+                      };
                     } else {
-                      newFields.push({ name: placeholder, value: e.target.value });
+                      newFields.push({
+                        name: placeholder,
+                        value: e.target.value,
+                      });
                     }
                     onDynamicFieldsChange(newFields);
                   }}
@@ -250,8 +291,9 @@ export default function PromptPreview({
                   </HoverCardTrigger>
                   <HoverCardContent>
                     <p className="text-sm">
-                      This is the instruction prompt that will be used to enhance your template.
-                      You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
+                      This is the instruction prompt that will be used to
+                      enhance your template. You can edit it directly or use the
+                      Enhancement Prompts settings to modify the defaults.
                     </p>
                   </HoverCardContent>
                 </HoverCard>
@@ -267,7 +309,9 @@ export default function PromptPreview({
             </div>
             {enableEnhancement && (
               <Textarea
-                value={composedPrompt || generateEnhancementPrompt(template, '')}
+                value={
+                  composedPrompt || generateEnhancementPrompt(template, "")
+                }
                 onChange={(e) => setComposedPrompt(e.target.value)}
                 className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20 resize-y"
                 onKeyDown={handleKeyPress}
@@ -277,12 +321,8 @@ export default function PromptPreview({
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">Enhanced Prompt</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetToOriginal}
-              >
+              <h3 className="text-lg font-semibold">Prompt</h3>
+              <Button variant="outline" size="sm" onClick={resetToOriginal}>
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Reset Enhanced
               </Button>
@@ -310,38 +350,48 @@ export default function PromptPreview({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onSaveEnhanced({
-                      ...template,
-                      content: preservePlaceholders(
-                        decodePlaceholders(enhanceMutation.data.enhancedPrompt),
-                        template.content
-                      ),
-                    })}
+                    onClick={() =>
+                      onSaveEnhanced({
+                        ...template,
+                        content: preservePlaceholders(
+                          decodePlaceholders(
+                            enhanceMutation.data.enhancedPrompt,
+                          ),
+                          template.content,
+                        ),
+                      })
+                    }
                   >
                     <Save className="mr-2 h-4 w-4" />
                     Save as Template
                   </Button>
                 )}
               </div>
-              <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg min-h-[150px]">
+              <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8"
-                  onClick={() => handleCopy(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
+                  onClick={(e) => {
+                    e.preventDefault(); 
+                    handleCopy(decodePlaceholders(enhanceMutation.data.enhancedPrompt));
+                  }}
+                  type="button" 
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-                <Textarea
-                  className="whitespace-pre-wrap pt-8 font-mono w-full min-h-[120px] bg-transparent border-none focus-visible:ring-0 resize-none"
+                <TextareaAutosize
+                  className="whitespace-pre-wrap pt-8 font-mono w-full bg-transparent border-none focus-visible:ring-0 resize-none overflow-y-auto"
                   value={decodePlaceholders(enhanceMutation.data.enhancedPrompt)}
                   onChange={(e) => {
-                    // Update the enhanced prompt in the mutation data
                     enhanceMutation.data = {
                       ...enhanceMutation.data,
-                      enhancedPrompt: e.target.value
+                      enhancedPrompt: e.target.value,
                     };
                   }}
+                  minRows={3}
+                  maxRows={10}
+                  style={{ paddingRight: '2.5rem' }} 
                 />
               </div>
             </div>
@@ -357,7 +407,7 @@ export default function PromptPreview({
             ) : (
               <Wand2 className="mr-2 h-4 w-4" />
             )}
-            {enableEnhancement ? 'Enhance' : 'Process'}
+            {enableEnhancement ? "Enhance" : "Process"}
           </Button>
         </div>
       </form>
@@ -372,7 +422,9 @@ export default function PromptPreview({
         onClose={() => setShowFullPromptModal(false)}
         template={template}
         dynamicFields={dynamicFields}
-        enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, '')}
+        enhancedPrompt={
+          composedPrompt || generateEnhancementPrompt(template, "")
+        }
         enableEnhancement={enableEnhancement}
         onSave={handleSaveEditedPrompt}
       />
