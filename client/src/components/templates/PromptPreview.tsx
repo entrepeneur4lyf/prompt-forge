@@ -241,7 +241,7 @@ export default function PromptPreview({
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">Enhancement Instructions</h3>
+                <h3 className="text-lg font-semibold">Prompt Template</h3>
                 <HoverCard>
                   <HoverCardTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-6 px-2">
