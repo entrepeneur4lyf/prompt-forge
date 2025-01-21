@@ -373,15 +373,15 @@ export default function PromptPreview({
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8"
                   onClick={(e) => {
-                    e.preventDefault(); 
+                    e.preventDefault();
                     handleCopy(decodePlaceholders(enhanceMutation.data.enhancedPrompt));
                   }}
-                  type="button" 
+                  type="button"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
                 <TextareaAutosize
-                  className="whitespace-pre-wrap pt-8 font-mono w-full bg-transparent border-none focus-visible:ring-0 resize-none overflow-y-auto"
+                  className="whitespace-pre-wrap pt-8 font-mono w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-0 resize-none overflow-y-auto pr-10 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40"
                   value={decodePlaceholders(enhanceMutation.data.enhancedPrompt)}
                   onChange={(e) => {
                     enhanceMutation.data = {
@@ -391,7 +391,11 @@ export default function PromptPreview({
                   }}
                   minRows={3}
                   maxRows={10}
-                  style={{ paddingRight: '2.5rem' }} 
+                  style={{
+                    paddingRight: '2.5rem',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'var(--muted) transparent'
+                  }}
                 />
               </div>
             </div>
