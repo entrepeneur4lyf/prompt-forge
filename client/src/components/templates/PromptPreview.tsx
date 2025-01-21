@@ -281,6 +281,18 @@ export default function PromptPreview({
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => {
+                    const newFields = [];
+                    onDynamicFieldsChange(newFields);
+                    enhanceMutation.reset();
+                  }}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Clear
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={resetToOriginal}
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />

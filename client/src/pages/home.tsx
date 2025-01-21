@@ -11,6 +11,7 @@ import { Settings, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -20,6 +21,9 @@ export default function Home() {
   const [dynamicFields, setDynamicFields] = useState<Array<{ name: string; value: string }>>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState('templates');
+
+  // Get selected model from localStorage
+  const selectedModel = localStorage.getItem('selectedModel') || 'gemini-1.5-pro';
 
   const { data: templates = [], isLoading, error } = useQuery({
     queryKey: ['/api/templates'],
@@ -104,25 +108,30 @@ export default function Home() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Prompt Template Manager</h1>
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => {
-              setEditingTemplate({} as Template);
-              setActiveTab('create-edit');
-            }} 
-            data-testid="template-create-button"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Template
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowSettings(true)}
-            data-testid="settings-button"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="px-3 py-1 text-sm">
+            Model: {selectedModel}
+          </Badge>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                setEditingTemplate({} as Template);
+                setActiveTab('create-edit');
+              }} 
+              data-testid="template-create-button"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Template
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSettings(true)}
+              data-testid="settings-button"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+          </div>
         </div>
       </div>
 
