@@ -23,6 +23,10 @@ import {
   methodologyTypes,
   providerTypes 
 } from '@/lib/types';
+import { enhancePrompt } from '@/lib/api';
+import { Input } from '@/components/ui/input';
+import { Wand2, X, Loader2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 
 interface EnhancementPromptsDialogProps {
   open: boolean;
@@ -36,9 +40,43 @@ export default function EnhancementPromptsDialog({
   const { toast } = useToast();
   const [prompts, setPrompts] = useState(getCustomPrompts());
   const [activeTab, setActiveTab] = useState('domains');
+  const [metaMetaPrompt, setMetaMetaPrompt] = useState(
+    localStorage.getItem('metaMetaPrompt') || 'Enhance this prompt enhancement instruction to be more effective and precise while maintaining its core purpose.'
+  );
+  const [enhancingPromptId, setEnhancingPromptId] = useState<string | null>(null);
+
+  const enhanceMutation = useMutation({
+    mutationFn: enhancePrompt,
+    onSuccess: (data) => {
+      if (enhancingPromptId) {
+        const [category, item] = enhancingPromptId.split('|');
+        setPrompts((prev) => ({
+          ...prev,
+          [category]: {
+            ...prev[category],
+            [item]: data.enhancedPrompt,
+          },
+        }));
+        setEnhancingPromptId(null);
+        toast({
+          title: 'Success',
+          description: 'Enhancement prompt updated successfully',
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to enhance prompt',
+        variant: 'destructive',
+      });
+      setEnhancingPromptId(null);
+    },
+  });
 
   const handleSave = () => {
     saveCustomPrompts(prompts);
+    localStorage.setItem('metaMetaPrompt', metaMetaPrompt);
     toast({
       title: 'Prompts Saved',
       description: 'Your custom enhancement prompts have been saved.',
@@ -55,6 +93,16 @@ export default function EnhancementPromptsDialog({
     });
   };
 
+  const handleMetaEnhance = async (category: string, item: string) => {
+    const promptId = `${category}|${item}`;
+    setEnhancingPromptId(promptId);
+
+    const currentPrompt = prompts[category][item];
+    const enhancementPrompt = `${metaMetaPrompt}\n\nCurrent Enhancement Prompt:\n${currentPrompt}`;
+
+    enhanceMutation.mutate(enhancementPrompt);
+  };
+
   const renderPromptFields = (
     category: string,
     items: readonly string[],
@@ -66,19 +114,34 @@ export default function EnhancementPromptsDialog({
           <label className="text-sm font-medium mb-2 block">
             {item}
           </label>
-          <Textarea
-            value={prompts[promptCategory][item]}
-            onChange={(e) =>
-              setPrompts((prev) => ({
-                ...prev,
-                [promptCategory]: {
-                  ...prev[promptCategory],
-                  [item]: e.target.value,
-                },
-              }))
-            }
-            className="min-h-[100px]"
-          />
+          <div className="relative">
+            <Textarea
+              value={prompts[promptCategory][item]}
+              onChange={(e) =>
+                setPrompts((prev) => ({
+                  ...prev,
+                  [promptCategory]: {
+                    ...prev[promptCategory],
+                    [item]: e.target.value,
+                  },
+                }))
+              }
+              className="min-h-[100px] pr-10"
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute right-2 top-2"
+              onClick={() => handleMetaEnhance(promptCategory, item)}
+              disabled={enhanceMutation.isPending}
+            >
+              {enhancingPromptId === `${promptCategory}|${item}` ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
       ))}
     </div>
@@ -91,6 +154,25 @@ export default function EnhancementPromptsDialog({
           <DialogTitle>Enhancement Prompts</DialogTitle>
         </DialogHeader>
 
+        <div className="sticky top-0 z-10 bg-background p-4 border-b">
+          <div className="flex gap-2 items-center">
+            <Input
+              value={metaMetaPrompt}
+              onChange={(e) => setMetaMetaPrompt(e.target.value)}
+              className="flex-1"
+              placeholder="Enter meta enhancement prompt..."
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setMetaMetaPrompt('')}
+              title="Clear meta prompt"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="domains">Domains</TabsTrigger>
@@ -102,23 +184,23 @@ export default function EnhancementPromptsDialog({
 
           <ScrollArea className="h-[500px] pr-4">
             <TabsContent value="domains">
-              {renderPromptFields('Domains', templateDomains, 'domains')}
+              {renderPromptFields('domains', templateDomains, 'domains')}
             </TabsContent>
 
             <TabsContent value="providers">
-              {renderPromptFields('Providers', providerTypes, 'providers')}
+              {renderPromptFields('providers', providerTypes, 'providers')}
             </TabsContent>
 
             <TabsContent value="models">
-              {renderPromptFields('Models', modelTypes, 'models')}
+              {renderPromptFields('models', modelTypes, 'models')}
             </TabsContent>
 
             <TabsContent value="roles">
-              {renderPromptFields('Roles', roleTypes, 'roles')}
+              {renderPromptFields('roles', roleTypes, 'roles')}
             </TabsContent>
 
             <TabsContent value="methodologies">
-              {renderPromptFields('Methodologies', methodologyTypes, 'methodologies')}
+              {renderPromptFields('methodologies', methodologyTypes, 'methodologies')}
             </TabsContent>
           </ScrollArea>
         </Tabs>
