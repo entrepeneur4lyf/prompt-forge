@@ -2,7 +2,7 @@ import { Template, templateDomains, providerTypes, modelTypes } from '@/lib/type
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Star, Trash2, Pencil } from 'lucide-react';
+import { Star, Trash2, Pencil, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useMemo } from 'react';
@@ -13,6 +13,7 @@ interface TemplateListProps {
   onSelect: (template: Template) => void;
   onDelete: (id: number) => void;
   onEdit: (template: Template) => void;
+  onDuplicate?: (template: Template) => void;
 }
 
 export default function TemplateList({
@@ -20,7 +21,8 @@ export default function TemplateList({
   selectedTemplate,
   onSelect,
   onDelete,
-  onEdit
+  onEdit,
+  onDuplicate
 }: TemplateListProps) {
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
 
@@ -74,26 +76,24 @@ export default function TemplateList({
     onDelete(id);
   };
 
+  const handleDuplicateClick = (e: React.MouseEvent, template: Template) => {
+    e.stopPropagation();
+    if (onDuplicate) {
+      onDuplicate(template);
+    }
+  };
+
   return (
     <Card className="p-6" data-testid="template-list-card">
       <div className="space-y-5">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-foreground">Templates</h2>
-          <Select 
-            value={selectedDomain} 
-            onValueChange={setSelectedDomain}
-          >
-            <SelectTrigger 
-              className="w-[180px]"
-              data-testid="template-list-filter-domain"
-            >
+          <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+            <SelectTrigger className="w-[180px]" data-testid="template-list-filter-domain">
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem 
-                value="all"
-                data-testid="template-list-filter-domain-option-all"
-              >
+              <SelectItem value="all" data-testid="template-list-filter-domain-option-all">
                 All Categories
               </SelectItem>
               {templateDomains.map(domain => (
@@ -140,6 +140,15 @@ export default function TemplateList({
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDuplicateClick(e, template)}
+                      title="Duplicate template"
+                      data-testid={`template-list-button-duplicate-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <Copy className="h-4 w-4 text-muted-foreground" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

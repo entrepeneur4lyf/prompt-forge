@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTemplates, createTemplate, updateTemplate, deleteTemplate } from '@/lib/api';
+import { getTemplates, createTemplate, updateTemplate, deleteTemplate, duplicateTemplate } from '@/lib/api';
 import { Template } from '@/lib/types';
 import TemplateList from '@/components/templates/TemplateList';
 import TemplateForm from '@/components/templates/TemplateForm';
@@ -88,6 +88,24 @@ export default function Home() {
     },
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: duplicateTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      toast({
+        title: 'Success',
+        description: 'Template duplicated successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to duplicate template',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleSubmit = (template: Partial<Template>) => {
     if (editingTemplate?.id) {
       updateMutation.mutate({ ...template, id: editingTemplate.id } as Template);
@@ -156,6 +174,7 @@ export default function Home() {
                   setActiveTab('create-edit');
                 }}
                 onDelete={(id) => deleteMutation.mutate(id)}
+                onDuplicate={(template) => duplicateMutation.mutate(template)}
               />
             </TabsContent>
 

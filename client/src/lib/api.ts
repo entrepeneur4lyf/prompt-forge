@@ -19,6 +19,17 @@ export async function createTemplate(template: CreateTemplateInput): Promise<Tem
   return res.json();
 }
 
+export async function duplicateTemplate(template: Template): Promise<Template> {
+  // Create a new template with the same content but a different name
+  const { id, createdAt, updatedAt, ...rest } = template;
+  const newTemplate = {
+    ...rest,
+    name: `${template.name} (1)` // The backend will handle incrementing if this name exists
+  };
+
+  return createTemplate(newTemplate);
+}
+
 export async function updateTemplate(template: UpdateTemplateInput): Promise<Template> {
   const res = await fetch(`${API_BASE}/templates/${template.id}`, {
     method: 'PUT',
