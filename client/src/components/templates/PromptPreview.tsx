@@ -38,7 +38,6 @@ export default function PromptPreview({
     return stored === null ? true : JSON.parse(stored);
   });
 
-  // Save enhancement toggle state
   const handleEnhancementToggle = (enabled: boolean) => {
     setEnableEnhancement(enabled);
     localStorage.setItem('enableEnhancement', JSON.stringify(enabled));
@@ -112,15 +111,15 @@ export default function PromptPreview({
   };
 
   const handleEnhance = async () => {
+    if (!template) return;
+
     const basePrompt = generatePrompt();
-    if (enableEnhancement) {
-      const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, '');
-      const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
-      enhanceMutation.mutate(fullPrompt);
-    } else {
-      // If enhancement is disabled, just use the base prompt
-      enhanceMutation.mutate(basePrompt);
-    }
+    const promptToSend = enableEnhancement
+      ? `${composedPrompt || generateEnhancementPrompt(template, '')}\n\nPlease enhance the following prompt while maintaining its core intent and purpose:\n\n${basePrompt}`
+      : basePrompt;
+
+    console.log('Sending prompt:', promptToSend); // Debug log
+    enhanceMutation.mutate(promptToSend);
   };
 
   if (!template) {
@@ -137,6 +136,11 @@ export default function PromptPreview({
     template.content.matchAll(/\{\{([^}]+)\}\}/g),
     (m) => m[1]
   );
+
+  const isPromptField = (fieldName: string) => {
+    const name = fieldName.toLowerCase();
+    return name.includes('prompt') || name === 'content';
+  };
 
   return (
     <Card className="p-4">
@@ -183,8 +187,7 @@ export default function PromptPreview({
       <form onSubmit={handleSubmit} className="space-y-6">
         {placeholders.map((placeholder) => {
           const field = dynamicFields.find((f) => f.name === placeholder);
-          const isPromptField = placeholder.toLowerCase() === 'prompt';
-          const InputComponent = isPromptField ? Textarea : Input;
+          const isPromptInput = isPromptField(placeholder);
           const fieldId = `field-${placeholder}`;
 
           return (
@@ -192,24 +195,44 @@ export default function PromptPreview({
               <Label htmlFor={fieldId} className="text-sm font-medium mb-2 block">
                 {formatFieldName(placeholder)}
               </Label>
-              <InputComponent
-                id={fieldId}
-                value={field?.value || ''}
-                onChange={(e) => {
-                  const newFields = [...dynamicFields];
-                  const index = newFields.findIndex((f) => f.name === placeholder);
-                  if (index >= 0) {
-                    newFields[index] = { name: placeholder, value: e.target.value };
-                  } else {
-                    newFields.push({ name: placeholder, value: e.target.value });
-                  }
-                  onDynamicFieldsChange(newFields);
-                }}
-                onKeyDown={handleKeyPress}
-                placeholder={`Enter value for ${formatFieldName(placeholder)}`}
-                className={`w-full ${isPromptField ? 'min-h-[100px] resize-y' : ''}`}
-                aria-label={`Enter ${formatFieldName(placeholder)}`}
-              />
+              {isPromptInput ? (
+                <Textarea
+                  id={fieldId}
+                  value={field?.value || ''}
+                  onChange={(e) => {
+                    const newFields = [...dynamicFields];
+                    const index = newFields.findIndex((f) => f.name === placeholder);
+                    if (index >= 0) {
+                      newFields[index] = { name: placeholder, value: e.target.value };
+                    } else {
+                      newFields.push({ name: placeholder, value: e.target.value });
+                    }
+                    onDynamicFieldsChange(newFields);
+                  }}
+                  onKeyDown={handleKeyPress}
+                  placeholder={`Enter value for ${formatFieldName(placeholder)}`}
+                  className="w-full min-h-[100px] resize-y font-mono bg-muted/30"
+                  aria-label={`Enter ${formatFieldName(placeholder)}`}
+                />
+              ) : (
+                <Input
+                  id={fieldId}
+                  value={field?.value || ''}
+                  onChange={(e) => {
+                    const newFields = [...dynamicFields];
+                    const index = newFields.findIndex((f) => f.name === placeholder);
+                    if (index >= 0) {
+                      newFields[index] = { name: placeholder, value: e.target.value };
+                    } else {
+                      newFields.push({ name: placeholder, value: e.target.value });
+                    }
+                    onDynamicFieldsChange(newFields);
+                  }}
+                  placeholder={`Enter value for ${formatFieldName(placeholder)}`}
+                  className="w-full"
+                  aria-label={`Enter ${formatFieldName(placeholder)}`}
+                />
+              )}
             </div>
           );
         })}
@@ -243,14 +266,12 @@ export default function PromptPreview({
               </div>
             </div>
             {enableEnhancement && (
-              <>
-                <Textarea
-                  value={composedPrompt || generateEnhancementPrompt(template, '')}
-                  onChange={(e) => setComposedPrompt(e.target.value)}
-                  className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
-                  onKeyDown={handleKeyPress}
-                />
-              </>
+              <Textarea
+                value={composedPrompt || generateEnhancementPrompt(template, '')}
+                onChange={(e) => setComposedPrompt(e.target.value)}
+                className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20 resize-y"
+                onKeyDown={handleKeyPress}
+              />
             )}
           </div>
 
@@ -277,7 +298,7 @@ export default function PromptPreview({
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <div className="whitespace-pre-wrap pt-8">
+              <div className="whitespace-pre-wrap pt-8 font-mono">
                 {generatePrompt()}
               </div>
             </div>
@@ -316,7 +337,7 @@ export default function PromptPreview({
                   <Copy className="h-4 w-4" />
                 </Button>
                 <div
-                  className="whitespace-pre-wrap pt-8"
+                  className="whitespace-pre-wrap pt-8 font-mono"
                   dangerouslySetInnerHTML={{
                     __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt)
                   }}
