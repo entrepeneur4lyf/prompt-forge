@@ -277,7 +277,7 @@ export default function PromptPreview({
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">{enableEnhancement ? 'Enhanced' : 'Generated'} Prompt</h3>
+              <h3 className="text-lg font-semibold">Enhanced Prompt</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -305,9 +305,7 @@ export default function PromptPreview({
           {enhanceMutation.data && (
             <div>
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">
-                  {enableEnhancement ? 'Enhanced' : 'Generated'} Output
-                </h3>
+                <h3 className="text-lg font-semibold">Enhanced Prompt</h3>
                 {onSaveEnhanced && (
                   <Button
                     variant="outline"
@@ -334,10 +332,15 @@ export default function PromptPreview({
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-                <div
-                  className="whitespace-pre-wrap pt-8 font-mono"
-                  dangerouslySetInnerHTML={{
-                    __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt)
+                <Textarea
+                  className="whitespace-pre-wrap pt-8 font-mono w-full min-h-[120px] bg-transparent border-none focus-visible:ring-0 resize-none"
+                  value={decodePlaceholders(enhanceMutation.data.enhancedPrompt)}
+                  onChange={(e) => {
+                    // Update the enhanced prompt in the mutation data
+                    enhanceMutation.data = {
+                      ...enhanceMutation.data,
+                      enhancedPrompt: e.target.value
+                    };
                   }}
                 />
               </div>
