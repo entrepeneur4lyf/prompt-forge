@@ -30,7 +30,6 @@ export default function PromptPreview({
   onSaveEnhanced,
 }: PromptPreviewProps) {
   const { toast } = useToast();
-  const [enhancementInstructions, setEnhancementInstructions] = useState('');
   const [showPromptsDialog, setShowPromptsDialog] = useState(false);
   const [showFullPromptModal, setShowFullPromptModal] = useState(false);
   const [composedPrompt, setComposedPrompt] = useState('');
@@ -58,10 +57,14 @@ export default function PromptPreview({
     },
   });
 
+  const handleSubmit = useCallback((e?: React.FormEvent) => {
+    e?.preventDefault();
+    handleEnhance();
+  }, []);
+
   const clearAll = () => {
     onDynamicFieldsChange([]);
     setComposedPrompt('');
-    setEnhancementInstructions('');
     enhanceMutation.reset();
     toast({
       title: 'Cleared',
@@ -85,10 +88,10 @@ export default function PromptPreview({
     });
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
-    if (e.key === 'Enter' && name.toLowerCase() === 'prompt') {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleEnhance();
+      handleSubmit();
     }
   };
 
@@ -98,6 +101,26 @@ export default function PromptPreview({
       .split(/(?=[A-Z])|_|\s/)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
+  };
+
+  const generatePrompt = () => {
+    let prompt = template?.content || '';
+    dynamicFields.forEach((field) => {
+      prompt = prompt.replace(`{{${field.name}}}`, field.value);
+    });
+    return prompt;
+  };
+
+  const handleEnhance = async () => {
+    const basePrompt = generatePrompt();
+    if (enableEnhancement) {
+      const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, '');
+      const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
+      enhanceMutation.mutate(fullPrompt);
+    } else {
+      // If enhancement is disabled, just use the base prompt
+      enhanceMutation.mutate(basePrompt);
+    }
   };
 
   if (!template) {
@@ -114,55 +137,6 @@ export default function PromptPreview({
     template.content.matchAll(/\{\{([^}]+)\}\}/g),
     (m) => m[1]
   );
-
-  const generatePrompt = () => {
-    let prompt = template.content;
-    dynamicFields.forEach((field) => {
-      prompt = prompt.replace(`{{${field.name}}}`, field.value);
-    });
-    return prompt;
-  };
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    toast({
-      title: 'Copied',
-      description: 'Prompt copied to clipboard',
-    });
-  };
-
-  const handleSaveEnhanced = () => {
-    if (!enhanceMutation.data?.enhancedPrompt || !onSaveEnhanced || !template) {
-      return;
-    }
-
-    const preservedContent = preservePlaceholders(
-      decodePlaceholders(enhanceMutation.data.enhancedPrompt),
-      template.content
-    );
-
-    onSaveEnhanced({
-      ...template,
-      content: preservedContent,
-    });
-
-    toast({
-      title: 'Template Updated',
-      description: 'Enhanced prompt has been saved to the template.',
-    });
-  };
-
-  const handleEnhance = async () => {
-    const basePrompt = generatePrompt();
-    if (enableEnhancement) {
-      const enhancementPrompt = composedPrompt || generateEnhancementPrompt(template, enhancementInstructions);
-      const fullPrompt = `${enhancementPrompt}\n\nPlease enhance the following prompt:\n${basePrompt}`;
-      enhanceMutation.mutate(fullPrompt);
-    } else {
-      // If enhancement is disabled, just use the base prompt
-      enhanceMutation.mutate(basePrompt);
-    }
-  };
 
   return (
     <Card className="p-4">
@@ -206,18 +180,20 @@ export default function PromptPreview({
         </div>
       </div>
 
-      <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {placeholders.map((placeholder) => {
           const field = dynamicFields.find((f) => f.name === placeholder);
           const isPromptField = placeholder.toLowerCase() === 'prompt';
           const InputComponent = isPromptField ? Textarea : Input;
+          const fieldId = `field-${placeholder}`;
 
           return (
             <div key={placeholder}>
-              <label className="text-sm font-medium mb-2 block">
+              <Label htmlFor={fieldId} className="text-sm font-medium mb-2 block">
                 {formatFieldName(placeholder)}
-              </label>
+              </Label>
               <InputComponent
+                id={fieldId}
                 value={field?.value || ''}
                 onChange={(e) => {
                   const newFields = [...dynamicFields];
@@ -229,139 +205,140 @@ export default function PromptPreview({
                   }
                   onDynamicFieldsChange(newFields);
                 }}
-                onKeyDown={(e) => handleKeyPress(e, placeholder)}
+                onKeyDown={handleKeyPress}
                 placeholder={`Enter value for ${formatFieldName(placeholder)}`}
-                className={`w-full ${isPromptField ? 'min-h-[100px]' : ''}`}
+                className={`w-full ${isPromptField ? 'min-h-[100px] resize-y' : ''}`}
+                aria-label={`Enter ${formatFieldName(placeholder)}`}
               />
             </div>
           );
         })}
-      </div>
 
-      <div className="space-y-6 mt-8">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Enhancement Instructions</h3>
-              <HoverCard>
-                <HoverCardTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 px-2">
-                    ?
-                  </Button>
-                </HoverCardTrigger>
-                <HoverCardContent>
-                  <p className="text-sm">
-                    This is the instruction prompt that will be used to enhance your template.
-                    You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
-                  </p>
-                </HoverCardContent>
-              </HoverCard>
+        <div className="space-y-6 mt-8">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">Enhancement Instructions</h3>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 px-2">
+                      ?
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent>
+                    <p className="text-sm">
+                      This is the instruction prompt that will be used to enhance your template.
+                      You can edit it directly or use the Enhancement Prompts settings to modify the defaults.
+                    </p>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="enhance-mode"
+                  checked={enableEnhancement}
+                  onCheckedChange={handleEnhancementToggle}
+                />
+                <Label htmlFor="enhance-mode">Enable Enhancement</Label>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="enhance-mode"
-                checked={enableEnhancement}
-                onCheckedChange={handleEnhancementToggle}
-              />
-              <Label htmlFor="enhance-mode">Enable Enhancement</Label>
-            </div>
+            {enableEnhancement && (
+              <>
+                <Textarea
+                  value={composedPrompt || generateEnhancementPrompt(template, '')}
+                  onChange={(e) => setComposedPrompt(e.target.value)}
+                  className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
+                  onKeyDown={handleKeyPress}
+                />
+              </>
+            )}
           </div>
-          {enableEnhancement && (
-            <>
-              <Textarea
-                value={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
-                onChange={(e) => setComposedPrompt(e.target.value)}
-                className="min-h-[150px] font-mono text-sm bg-muted/30 border-2 border-primary/20"
-              />
-              <Input
-                value={enhancementInstructions}
-                onChange={(e) => setEnhancementInstructions(e.target.value)}
-                placeholder="Add specific instructions for enhancement (optional)"
-                className="w-full mt-2"
-              />
-            </>
-          )}
-        </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold">{enableEnhancement ? 'Enhanced' : 'Generated'} Prompt</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetToOriginal}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset to Original
-              </Button>
-            </div>
-          </div>
-          <div className="relative bg-muted p-4 rounded-lg min-h-[120px]">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 h-8 w-8"
-              onClick={() => copyToClipboard(generatePrompt())}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <div className="whitespace-pre-wrap pt-8">
-              {generatePrompt()}
-            </div>
-          </div>
-        </div>
-
-        {enhanceMutation.data && (
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">
-                {enableEnhancement ? 'Enhanced' : 'Generated'} Output
-              </h3>
-              {onSaveEnhanced && (
+              <h3 className="text-lg font-semibold">{enableEnhancement ? 'Enhanced' : 'Generated'} Prompt</h3>
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSaveEnhanced}
-                  className="ml-2"
+                  onClick={resetToOriginal}
                 >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save as Template
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset to Original
                 </Button>
-              )}
+              </div>
             </div>
-            <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg min-h-[150px]">
+            <div className="relative bg-muted p-4 rounded-lg min-h-[120px]">
               <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-2 right-2 h-8 w-8"
-                onClick={() => copyToClipboard(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
+                onClick={() => navigator.clipboard.writeText(generatePrompt())}
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <div
-                className="whitespace-pre-wrap pt-8"
-                dangerouslySetInnerHTML={{
-                  __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt)
-                }}
-              />
+              <div className="whitespace-pre-wrap pt-8">
+                {generatePrompt()}
+              </div>
             </div>
           </div>
-        )}
 
-        <Button
-          className="w-full"
-          onClick={handleEnhance}
-          disabled={enhanceMutation.isPending}
-        >
-          {enhanceMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Wand2 className="mr-2 h-4 w-4" />
+          {enhanceMutation.data && (
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">
+                  {enableEnhancement ? 'Enhanced' : 'Generated'} Output
+                </h3>
+                {onSaveEnhanced && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSaveEnhanced({
+                      ...template,
+                      content: preservePlaceholders(
+                        decodePlaceholders(enhanceMutation.data.enhancedPrompt),
+                        template.content
+                      ),
+                    })}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Save as Template
+                  </Button>
+                )}
+              </div>
+              <div className="relative bg-muted/80 border-2 border-primary/10 p-4 rounded-lg min-h-[150px]">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8"
+                  onClick={() => navigator.clipboard.writeText(decodePlaceholders(enhanceMutation.data.enhancedPrompt))}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <div
+                  className="whitespace-pre-wrap pt-8"
+                  dangerouslySetInnerHTML={{
+                    __html: encodePlaceholders(enhanceMutation.data.enhancedPrompt)
+                  }}
+                />
+              </div>
+            </div>
           )}
-          {enableEnhancement ? 'Enhance' : 'Process'}
-        </Button>
-      </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={enhanceMutation.isPending}
+          >
+            {enhanceMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="mr-2 h-4 w-4" />
+            )}
+            {enableEnhancement ? 'Enhance' : 'Process'}
+          </Button>
+        </div>
+      </form>
 
       <EnhancementPromptsDialog
         open={showPromptsDialog}
@@ -373,7 +350,7 @@ export default function PromptPreview({
         onClose={() => setShowFullPromptModal(false)}
         template={template}
         dynamicFields={dynamicFields}
-        enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, enhancementInstructions)}
+        enhancedPrompt={composedPrompt || generateEnhancementPrompt(template, '')}
         enableEnhancement={enableEnhancement}
       />
     </Card>
