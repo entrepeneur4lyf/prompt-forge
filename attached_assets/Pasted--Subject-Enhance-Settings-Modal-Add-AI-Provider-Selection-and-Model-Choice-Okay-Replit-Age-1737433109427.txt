@@ -1,0 +1,51 @@
+
+
+```
+Subject: Enhance Settings Modal - Add AI Provider Selection and Model Choice
+
+Okay, Replit Agent, let's update the settings modal. We need to add functionality for users to select their preferred AI provider and configure API keys for each. We'll focus on Google, Anthropic, and OpenAI, and we'll prioritize the latest models for each.
+
+Here's a breakdown of the changes:
+
+1.  **Radio Button Group for AI Provider:**
+    *   Add a radio button group labeled "AI Provider."
+    *   Include three options: "Google," "Anthropic," and "OpenAI."
+    *   Make "Google" the default selected option.
+
+2.  **API Key Input:**
+    *   For each provider, include a text input field for the API key.
+    *   Label each input clearly (e.g., "Google API Key," "Anthropic API Key," "OpenAI API Key").
+    *   Use a password input type to mask the API keys.
+    *   Consider adding a "Show/Hide" toggle for each API key input to allow users to view the key if needed.
+
+3.  **Model Selection:**
+    *   **Dynamically Display Models:**  When a user selects an AI provider, dynamically display a dropdown or a list of available models for that provider.
+    *   **Focus on Latest Models:** For each provider, list their most recent and relevant models. Here's a suggested list:
+        *   **Google:**
+            *   gemini-1.5-pro
+        *   **Anthropic:**
+            *   claude-3-5-sonnet-latest
+        *   **OpenAI:**
+            *   gpt-4o
+
+4.  **Storage:**
+    *   **API Keys:** Store the API keys securely.
+    *   **Selected Provider and Model:**  Remember the user's selected AI provider and model, making them the default on their next visit. Use local storage for this.
+
+5.  **UI Considerations:**
+    *   **Clear Labels:** Use clear and descriptive labels for all elements.
+    *   **Spacing and Alignment:** Ensure proper spacing and alignment for a clean and organized layout.
+    *   **Error Handling:** Add basic error handling. For instance, display an error if a user tries to save an invalid API key format.
+
+**Example Structure within the Settings Modal:**
+
+```
+Use models referenced above:
+
+
+AI Provider: ( ) Google [********************] (Google API Key, type=password, with show/hide toggle) [Dropdown/List: Gemini Pro (selected)] ( ) Anthropic [********************] (Anthropic API Key, type=password, with show/hide toggle) [Dropdown/List: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku (one selected)] ( ) OpenAI [____________________] (OpenAI API Key, type=password, with show/hide toggle) [Dropdown/List: GPT-4 Turbo, GPT-4, GPT-3.5 Turbo (one selected)]
+
+```
+
+Let's implement these changes to make our settings modal more powerful and user-friendly!
+```
