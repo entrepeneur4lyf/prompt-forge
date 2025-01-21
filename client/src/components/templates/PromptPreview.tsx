@@ -73,6 +73,13 @@ export default function PromptPreview({
     handleEnhance();
   };
 
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleEnhance();
+    }
+  };
+
   const resetToOriginal = () => {
     onDynamicFieldsChange([]);
     enhanceMutation.reset();
@@ -80,13 +87,6 @@ export default function PromptPreview({
       title: 'Reset',
       description: 'Prompt reset to original template',
     });
-  };
-
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleEnhance();
-    }
   };
 
   const formatFieldName = (name: string) => {
@@ -104,6 +104,7 @@ export default function PromptPreview({
     return prompt;
   };
 
+  // Pure function to handle copying text to clipboard
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
