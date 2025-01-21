@@ -52,7 +52,7 @@ export default function TemplateList({
       };
       return variants[value] || 'default';
     } else if (type === 'agent') {
-      return 'outline'; // Use outline variant for agent badges
+      return 'default'; // Use default variant for consistent black background
     } else {
       const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
         'Claude-Sonnet-3.5': 'default',
@@ -130,6 +130,15 @@ export default function TemplateList({
                       <Star className="h-5 w-5 flex-shrink-0 text-yellow-500" />
                     )}
                     <span className="font-semibold text-lg">{template.name}</span>
+                    {template.agentEnhanced && template.agentType !== 'None' && (
+                      <Badge 
+                        variant="default"
+                        className="bg-black text-white text-xs px-2 py-0.5 rounded-full"
+                        data-testid={`template-list-badge-agent-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {template.agentType}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -171,15 +180,6 @@ export default function TemplateList({
                       data-testid={`template-list-badge-model-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       {template.modelType}
-                    </Badge>
-                  )}
-                  {template.agentEnhanced && template.agentType !== 'None' && (
-                    <Badge 
-                      variant={getBadgeVariant('agent', template.agentType)}
-                      className="bg-black text-white"
-                      data-testid={`template-list-badge-agent-${template.name.toLowerCase().replace(/\s+/g, '-')}`}
-                    >
-                      {template.agentType}
                     </Badge>
                   )}
                 </div>
