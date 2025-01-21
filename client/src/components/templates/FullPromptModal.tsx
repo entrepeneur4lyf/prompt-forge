@@ -29,9 +29,42 @@ export function FullPromptModal({
   const renderSection = (title: string, content: string) => (
     <Card className="p-4 mb-4">
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <MarkdownPreview content={content} />
+      <div className="whitespace-pre-wrap font-mono text-sm">
+        {content}
+      </div>
     </Card>
   );
+
+  // Function to replace placeholders with actual values
+  const processTemplate = () => {
+    let content = template.content;
+    dynamicFields.forEach(({ name, value }) => {
+      content = content.replace(`{{${name}}}`, value);
+    });
+    return content;
+  };
+
+  // Construct the final enhancement prompt
+  const constructFinalPrompt = () => {
+    const originalContent = processTemplate();
+    const enhancementContext = `Original Template:
+${originalContent}
+
+Template Parameters:
+- Domain: ${template.domain}
+- Model: ${template.modelType}
+${template.agentEnhanced ? `- Agent Role: ${template.agentType}` : ''}
+- Methodologies: ${template.methodologies.join(', ')}
+
+Enhancement Instructions:
+${enhancedPrompt}
+
+Please enhance the following prompt while maintaining its core intent and purpose:
+
+${originalContent}`;
+
+    return enhancementContext;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -42,7 +75,7 @@ export function FullPromptModal({
         <ScrollArea className="h-full pr-4">
           <div className="space-y-6 py-4">
             {renderSection("Original Template", template.content)}
-            
+
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Template Parameters</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -77,7 +110,7 @@ export function FullPromptModal({
               </Card>
             )}
 
-            {renderSection("Final Enhanced Prompt", enhancedPrompt)}
+            {renderSection("Complete Enhancement Prompt", constructFinalPrompt())}
           </div>
         </ScrollArea>
       </DialogContent>
