@@ -24,7 +24,12 @@ interface ProviderConfig {
 const providers: Record<Provider, ProviderConfig> = {
   google: {
     name: 'Google',
-    models: ['gemini-1.5-pro'],
+    models: [
+      'gemini-2.0-flash-exp',
+      'gemini-2.0-flash-thinking-exp-1219',
+      'gemini-exp-1206',
+      'gemini-1.5-pro'
+    ],
   },
   anthropic: {
     name: 'Anthropic',
@@ -32,7 +37,13 @@ const providers: Record<Provider, ProviderConfig> = {
   },
   openai: {
     name: 'OpenAI',
-    models: ['gpt-4-turbo-preview', 'gpt-4', 'gpt-3.5-turbo'],
+    models: [
+      'gpt-4-turbo-preview',
+      'gpt-4',
+      'gpt-3.5-turbo',
+      'o1-2024-12-17',
+      'o1-mini-2024-09-12'
+    ],
   },
 };
 
