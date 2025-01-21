@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, KeyboardEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Template } from '@/lib/types';
 import { enhancePrompt } from '@/lib/api';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Wand2, Loader2, Settings2, Save, Maximize2 } from 'lucide-react';
+import { Copy, Wand2, Loader2, Settings2, Save, Maximize2, X } from 'lucide-react';
 import { generateEnhancementPrompt } from '@/lib/defaultPrompts';
 import EnhancementPromptsDialog from '../settings/EnhancementPromptsDialog';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -57,6 +57,40 @@ export default function PromptPreview({
       });
     },
   });
+
+  const clearAll = () => {
+    onDynamicFieldsChange([]);
+    setComposedPrompt('');
+    setEnhancementInstructions('');
+    enhanceMutation.reset();
+    toast({
+      title: 'Cleared',
+      description: 'All prompts have been cleared',
+    });
+  };
+
+  const clearGenerated = () => {
+    enhanceMutation.reset();
+    toast({
+      title: 'Cleared',
+      description: 'Generated prompt has been cleared',
+    });
+  };
+
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
+    if (e.key === 'Enter' && name.toLowerCase() === 'prompt') {
+      e.preventDefault();
+      handleEnhance();
+    }
+  };
+
+  // Format field name to title case
+  const formatFieldName = (name: string) => {
+    return name
+      .split(/(?=[A-Z])|_|\s/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
 
   if (!template) {
     return (
@@ -130,6 +164,22 @@ export default function PromptPreview({
           <Button
             variant="outline"
             size="sm"
+            onClick={clearAll}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Clear All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearGenerated}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Clear Generated
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowFullPromptModal(true)}
           >
             <Maximize2 className="mr-2 h-4 w-4" />
@@ -149,12 +199,15 @@ export default function PromptPreview({
       <div className="space-y-6">
         {placeholders.map((placeholder) => {
           const field = dynamicFields.find((f) => f.name === placeholder);
+          const isPromptField = placeholder.toLowerCase() === 'prompt';
+          const InputComponent = isPromptField ? Textarea : Input;
+
           return (
             <div key={placeholder}>
               <label className="text-sm font-medium mb-2 block">
-                {placeholder}
+                {formatFieldName(placeholder)}
               </label>
-              <Input
+              <InputComponent
                 value={field?.value || ''}
                 onChange={(e) => {
                   const newFields = [...dynamicFields];
@@ -166,8 +219,9 @@ export default function PromptPreview({
                   }
                   onDynamicFieldsChange(newFields);
                 }}
-                placeholder={`Enter value for ${placeholder}`}
-                className="w-full"
+                onKeyDown={(e) => handleKeyPress(e, placeholder)}
+                placeholder={`Enter value for ${formatFieldName(placeholder)}`}
+                className={`w-full ${isPromptField ? 'min-h-[100px]' : ''}`}
               />
             </div>
           );
