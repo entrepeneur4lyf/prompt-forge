@@ -1,5 +1,5 @@
 import { GeminiResponse, Template, CreateTemplateInput, UpdateTemplateInput } from './types';
-import { getApiKey } from './storage';
+import { getSelectedProviderApiKey } from './storage';
 
 const API_BASE = '/api';
 
@@ -63,11 +63,11 @@ export async function deleteTemplate(id: number): Promise<void> {
 }
 
 export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
-  const apiKey = getApiKey();
-  console.log('API Key present:', !!apiKey, 'Length:', apiKey?.length || 0);
+  const apiKey = getSelectedProviderApiKey();
+  console.log('API Key present:', !!apiKey);
 
   if (!apiKey) {
-    throw new Error('Gemini API key not found. Please add your API key in settings.');
+    throw new Error('API key not found for the selected provider. Please add your API key in settings.');
   }
 
   try {

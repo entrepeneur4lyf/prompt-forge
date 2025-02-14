@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getApiKeys, setApiKeys, SELECTED_PROVIDER, SELECTED_MODEL, StoredApiKeys } from '@/lib/storage';
 
 type Provider = 'google' | 'anthropic' | 'openai';
 
@@ -56,7 +57,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const { toast } = useToast();
   const [selectedProvider, setSelectedProvider] = useState<Provider>('google');
   const [selectedModel, setSelectedModel] = useState<string>('');
-  const [apiKeys, setApiKeys] = useState<Record<Provider, string>>({
+  const [apiKeys, setApiKeysState] = useState<StoredApiKeys>({
     google: '',
     anthropic: '',
     openai: '',
@@ -69,18 +70,14 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
   useEffect(() => {
     // Load settings from local storage
-    const storedProvider = localStorage.getItem('selectedProvider') as Provider;
-    const storedModel = localStorage.getItem('selectedModel');
-    const storedApiKeys = localStorage.getItem('apiKeys');
+    const storedProvider = localStorage.getItem(SELECTED_PROVIDER) as Provider;
+    const storedModel = localStorage.getItem(SELECTED_MODEL);
+    const storedApiKeys = getApiKeys();
 
     if (storedProvider) setSelectedProvider(storedProvider);
     if (storedModel) setSelectedModel(storedModel);
     if (storedApiKeys) {
-      try {
-        setApiKeys(JSON.parse(storedApiKeys));
-      } catch (e) {
-        console.error('Failed to parse stored API keys');
-      }
+      setApiKeysState(storedApiKeys);
     }
 
     // Set default model if none selected
@@ -91,9 +88,9 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
   const handleSave = () => {
     // Save settings to local storage
-    localStorage.setItem('selectedProvider', selectedProvider);
-    localStorage.setItem('selectedModel', selectedModel);
-    localStorage.setItem('apiKeys', JSON.stringify(apiKeys));
+    localStorage.setItem(SELECTED_PROVIDER, selectedProvider);
+    localStorage.setItem(SELECTED_MODEL, selectedModel);
+    setApiKeys(apiKeys);
 
     toast({
       title: 'Settings saved',
@@ -171,7 +168,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     type={showApiKey[key as Provider] ? 'text' : 'password'}
                     value={apiKeys[key as Provider]}
                     onChange={(e) =>
-                      setApiKeys(prev => ({
+                      setApiKeysState(prev => ({
                         ...prev,
                         [key]: e.target.value,
                       }))
