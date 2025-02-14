@@ -142,7 +142,7 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 min-h-screen flex flex-col">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Prompt Template Manager</h1>
         <div className="flex items-center gap-4">
@@ -172,9 +172,9 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 min-h-0">
+        <div className="flex flex-col min-h-[500px] md:min-h-0 md:h-[calc(100vh-12rem)]">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="w-full">
               <TabsTrigger value="templates" className="flex-1">Templates</TabsTrigger>
               <TabsTrigger value="create-edit" className="flex-1">
@@ -182,41 +182,55 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="templates">
-              <TemplateList 
-                templates={templates}
-                selectedTemplate={selectedTemplate}
-                onSelect={setSelectedTemplate}
-                onEdit={(template) => {
-                  setSelectedTemplate(null);
-                  setEditingTemplate(template);
-                  setActiveTab('create-edit');
-                }}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onDuplicate={(template) => duplicateMutation.mutate(template)}
-                onReorder={(reorderedTemplates) => reorderMutation.mutate(reorderedTemplates)}
-              />
+            <TabsContent 
+              value="templates" 
+              className="flex-1 overflow-hidden flex flex-col"
+              style={{ height: 'calc(100% - 42px)' }}
+            >
+              <div className="overflow-y-auto flex-1">
+                <TemplateList 
+                  templates={templates}
+                  selectedTemplate={selectedTemplate}
+                  onSelect={setSelectedTemplate}
+                  onEdit={(template) => {
+                    setSelectedTemplate(null);
+                    setEditingTemplate(template);
+                    setActiveTab('create-edit');
+                  }}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onDuplicate={(template) => duplicateMutation.mutate(template)}
+                  onReorder={(reorderedTemplates) => reorderMutation.mutate(reorderedTemplates)}
+                />
+              </div>
             </TabsContent>
 
-            <TabsContent value="create-edit">
-              <TemplateForm
-                template={editingTemplate}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setEditingTemplate(null);
-                  setActiveTab('templates');
-                }}
-              />
+            <TabsContent 
+              value="create-edit"
+              className="flex-1 overflow-hidden flex flex-col"
+              style={{ height: 'calc(100% - 42px)' }}
+            >
+              <div className="overflow-y-auto flex-1">
+                <TemplateForm
+                  template={editingTemplate}
+                  onSubmit={handleSubmit}
+                  onCancel={() => {
+                    setEditingTemplate(null);
+                    setActiveTab('templates');
+                  }}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
 
-        <div>
-          <PromptPreview
-            template={selectedTemplate}
-            dynamicFields={dynamicFields}
-            onDynamicFieldsChange={setDynamicFields}
-          />
+        <div className="flex flex-col min-h-[500px] md:min-h-0 md:h-[calc(100vh-12rem)]">
+          <div className="overflow-y-auto flex-1">
+            <PromptPreview
+              template={selectedTemplate}
+              dynamicFields={dynamicFields}
+              onDynamicFieldsChange={setDynamicFields}
+            />
+          </div>
         </div>
       </div>
 
