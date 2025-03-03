@@ -106,7 +106,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Gemini API Integration and OpenRouter support
+  // Gemini API Integration 
   app.post("/api/enhance", async (req, res) => {
     try {
       const apiKey = req.headers["x-api-key"];
@@ -136,7 +136,6 @@ export function registerRoutes(app: Express): Server {
       switch (provider) {
         case 'google':
             try {
-              // Strip the 'models/' prefix if present and format the model name correctly
               const modelId = req.body.model.replace(/^models\//, '');
               const url = new URL(`https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent`);
               url.searchParams.append("key", apiKey.toString());
@@ -285,68 +284,6 @@ export function registerRoutes(app: Express): Server {
             }
             break;
 
-        case 'openrouter':
-            try {
-              console.log("Backend - OpenRouter request:", {
-                model: req.body.model || "anthropic/claude-3-haiku",
-                hasApiKey: !!apiKey,
-                apiKeyLength: apiKey?.length
-              });
-
-              response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${apiKey}`,
-                  'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-                  'X-Title': 'Prompt Template Manager',
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  model: req.body.model || "anthropic/claude-3-haiku",
-                  messages: [{
-                    role: "user",
-                    content: req.body.prompt
-                  }],
-                  provider: {
-                    sort: 'throughput'
-                  }
-                })
-              });
-
-              // Read the response text
-              const rawResponse = await response.text();
-
-              if (!response.ok) {
-                console.error("Backend - OpenRouter non-OK response:", {
-                  status: response.status,
-                  statusText: response.statusText,
-                  headers: Object.fromEntries(response.headers.entries()),
-                  error: rawResponse
-                });
-
-                throw new Error(JSON.stringify({
-                  provider: 'openrouter',
-                  status: response.status,
-                  error: rawResponse
-                }));
-              }
-
-              // Parse the successful response
-              responseData = JSON.parse(rawResponse);
-
-            } catch (error) {
-              console.error("Backend - OpenRouter API request error:", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                requestDetails: {
-                  model: req.body.model,
-                  apiKeyPresent: !!apiKey
-                }
-              });
-              throw error;
-            }
-            break;
-
         default:
           throw new Error(`Unsupported provider: ${provider}`);
       }
@@ -387,13 +324,6 @@ export function registerRoutes(app: Express): Server {
         case 'deepseek':
           if (!responseData.choices?.[0]?.message?.content) {
             throw new Error("Unexpected response format from DeepSeek API");
-          }
-          enhancedPrompt = responseData.choices[0].message.content;
-          break;
-
-        case 'openrouter':
-          if (!responseData.choices?.[0]?.message?.content) {
-            throw new Error("Unexpected response format from OpenRouter API");
           }
           enhancedPrompt = responseData.choices[0].message.content;
           break;
