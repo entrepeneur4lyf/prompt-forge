@@ -118,7 +118,7 @@ export function registerRoutes(app: Express): Server {
         apiKeyLength: apiKey?.length,
         requestHeaders: {
           ...req.headers,
-          "x-api-key": "[REDACTED]" // Don't log the actual API key
+          "x-api-key": "[REDACTED]"
         },
         requestBody: {
           model: req.body.model,
@@ -131,6 +131,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       let response;
+      let responseData;
 
       switch (provider) {
         case 'google':
@@ -165,6 +166,8 @@ export function registerRoutes(app: Express): Server {
                   },
                 }),
               });
+
+              responseData = await response.json();
             } catch (error) {
               console.error("Backend - Google API request error:", {
                 error: error instanceof Error ? error.message : String(error),
@@ -202,40 +205,10 @@ export function registerRoutes(app: Express): Server {
                   max_tokens: 1024
                 })
               });
+
+              responseData = await response.json();
             } catch (error) {
               console.error("Backend - OpenAI API request error:", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined
-              });
-              throw error;
-            }
-            break;
-
-        case 'deepseek':
-            try {
-              console.log("Backend - DeepSeek request:", {
-                model: req.body.model,
-                hasApiKey: !!apiKey
-              });
-
-              response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                  model: req.body.model,
-                  messages: [{
-                    role: 'user',
-                    content: req.body.prompt
-                  }],
-                  temperature: 0.7,
-                  max_tokens: 1024
-                })
-              });
-            } catch (error) {
-              console.error("Backend - DeepSeek API request error:", {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined
               });
@@ -267,8 +240,44 @@ export function registerRoutes(app: Express): Server {
                   max_tokens: 1024
                 })
               });
+
+              responseData = await response.json();
             } catch (error) {
               console.error("Backend - Anthropic API request error:", {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+              });
+              throw error;
+            }
+            break;
+
+        case 'deepseek':
+            try {
+              console.log("Backend - DeepSeek request:", {
+                model: req.body.model,
+                hasApiKey: !!apiKey
+              });
+
+              response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                  model: req.body.model,
+                  messages: [{
+                    role: 'user',
+                    content: req.body.prompt
+                  }],
+                  temperature: 0.7,
+                  max_tokens: 1024
+                })
+              });
+
+              responseData = await response.json();
+            } catch (error) {
+              console.error("Backend - DeepSeek API request error:", {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined
               });
@@ -310,15 +319,27 @@ export function registerRoutes(app: Express): Server {
                 })
               });
 
+              // Read the response text
+              const rawResponse = await response.text();
+
               if (!response.ok) {
-                const errorData = await response.text();
                 console.error("Backend - OpenRouter non-OK response:", {
                   status: response.status,
                   statusText: response.statusText,
                   headers: Object.fromEntries(response.headers.entries()),
-                  error: errorData
+                  error: rawResponse
                 });
+
+                throw new Error(JSON.stringify({
+                  provider: 'openrouter',
+                  status: response.status,
+                  error: rawResponse
+                }));
               }
+
+              // Parse the successful response
+              responseData = JSON.parse(rawResponse);
+
             } catch (error) {
               console.error("Backend - OpenRouter API request error:", {
                 error: error instanceof Error ? error.message : String(error),
@@ -336,72 +357,51 @@ export function registerRoutes(app: Express): Server {
           throw new Error(`Unsupported provider: ${provider}`);
       }
 
-      console.log("Backend - API response status:", response.status);
-
+      // Check response status
       if (!response.ok) {
-        const errorText = await response.text();
-        let errorDetails;
-
-        try {
-          // Try to parse the error as JSON
-          errorDetails = JSON.parse(errorText);
-        } catch {
-          // If not JSON, use the raw text
-          errorDetails = errorText;
-        }
-
-        console.error(`Backend - ${provider} API error:`, {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorDetails
-        });
-
         throw new Error(JSON.stringify({
           provider,
           status: response.status,
-          error: errorDetails
+          error: responseData
         }));
       }
-
-      const data = await response.json();
-      console.log(`Backend - ${provider} API response data:`, JSON.stringify(data, null, 2));
 
       let enhancedPrompt;
 
       switch (provider) {
         case 'google':
-          if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+          if (!responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
             throw new Error("Unexpected response format from Gemini API");
           }
-          enhancedPrompt = data.candidates[0].content.parts[0].text;
+          enhancedPrompt = responseData.candidates[0].content.parts[0].text;
           break;
 
         case 'openai':
-          if (!data.choices?.[0]?.message?.content) {
+          if (!responseData.choices?.[0]?.message?.content) {
             throw new Error("Unexpected response format from OpenAI API");
           }
-          enhancedPrompt = data.choices[0].message.content;
+          enhancedPrompt = responseData.choices[0].message.content;
           break;
 
         case 'anthropic':
-          if (!data.content?.[0]?.text) {
+          if (!responseData.content?.[0]?.text) {
             throw new Error("Unexpected response format from Anthropic API");
           }
-          enhancedPrompt = data.content[0].text;
+          enhancedPrompt = responseData.content[0].text;
           break;
 
         case 'deepseek':
-          if (!data.choices?.[0]?.message?.content) {
+          if (!responseData.choices?.[0]?.message?.content) {
             throw new Error("Unexpected response format from DeepSeek API");
           }
-          enhancedPrompt = data.choices[0].message.content;
+          enhancedPrompt = responseData.choices[0].message.content;
           break;
 
         case 'openrouter':
-          if (!data.choices?.[0]?.message?.content) {
+          if (!responseData.choices?.[0]?.message?.content) {
             throw new Error("Unexpected response format from OpenRouter API");
           }
-          enhancedPrompt = data.choices[0].message.content;
+          enhancedPrompt = responseData.choices[0].message.content;
           break;
 
         default:
