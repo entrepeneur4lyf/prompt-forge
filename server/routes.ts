@@ -178,6 +178,39 @@ export function registerRoutes(app: Express): Server {
             }
             break;
 
+        case 'anthropic':
+            try {
+              // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+              console.log("Backend - Anthropic request:", {
+                model: req.body.model,
+                hasApiKey: !!apiKey
+              });
+
+              response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': apiKey,
+                  'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                  model: req.body.model,
+                  messages: [{
+                    role: 'user',
+                    content: req.body.prompt
+                  }],
+                  max_tokens: 1024
+                })
+              });
+            } catch (error) {
+              console.error("Backend - Anthropic API request error:", {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+              });
+              throw error;
+            }
+            break;
+
         case 'openrouter':
           try {
             console.log("Backend - OpenRouter request headers:", {
@@ -255,6 +288,13 @@ export function registerRoutes(app: Express): Server {
             throw new Error("Unexpected response format from Gemini API");
           }
           enhancedPrompt = data.candidates[0].content.parts[0].text;
+          break;
+
+        case 'anthropic':
+          if (!data.content?.[0]?.text) {
+            throw new Error("Unexpected response format from Anthropic API");
+          }
+          enhancedPrompt = data.content[0].text;
           break;
 
         case 'openrouter':
