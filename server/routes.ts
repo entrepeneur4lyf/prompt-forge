@@ -293,21 +293,14 @@ export function registerRoutes(app: Express): Server {
                 apiKeyLength: apiKey?.length
               });
 
-              const headers = {
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-                'X-Title': 'Prompt Template Manager',
-                'Content-Type': 'application/json'
-              };
-
-              console.log("Backend - OpenRouter headers being sent:", {
-                ...headers,
-                'Authorization': 'Bearer [REDACTED]'
-              });
-
               response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
-                headers,
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+                  'X-Title': 'Prompt Template Manager',
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                   model: req.body.model || "anthropic/claude-3-haiku",
                   messages: [{
