@@ -67,20 +67,32 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   const keys = getApiKeys();
   const apiKey = keys[selectedProvider as keyof typeof keys];
 
-  console.log('API Key present:', !!apiKey, 'Provider:', selectedProvider, 'Model:', selectedModel);
+  console.log('Frontend - Enhance Request Details:', {
+    provider: selectedProvider,
+    model: selectedModel,
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey?.length
+  });
 
   if (!apiKey) {
     throw new Error('API key not found for the selected provider. Please add your API key in settings.');
   }
 
   try {
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-Provider': selectedProvider,
+    };
+
+    console.log('Frontend - Making request with headers:', {
+      ...requestHeaders,
+      'X-API-Key': '[REDACTED]' // Don't log the actual API key
+    });
+
     const res = await fetch(`${API_BASE}/enhance`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey,
-        'X-Provider': selectedProvider,
-      },
+      headers: requestHeaders,
       body: JSON.stringify({ 
         prompt,
         model: selectedModel
@@ -89,9 +101,10 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('Enhancement request failed:', {
+      console.error('Frontend - Enhancement request failed:', {
         status: res.status,
         statusText: res.statusText,
+        headers: Object.fromEntries(res.headers.entries()),
         errorText
       });
       throw new Error(`Enhancement failed: ${errorText}`);
@@ -99,7 +112,7 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
 
     return res.json();
   } catch (error) {
-    console.error('Enhancement error:', error);
+    console.error('Frontend - Enhancement error:', error);
     throw error;
   }
 }

@@ -111,7 +111,20 @@ export function registerRoutes(app: Express): Server {
     try {
       const apiKey = req.headers["x-api-key"];
       const provider = req.headers["x-provider"] || 'google';
-      console.log("Enhance request received. Provider:", provider, "API key present:", !!apiKey);
+
+      console.log("Backend - Enhance request received:", {
+        provider,
+        hasApiKey: !!apiKey,
+        apiKeyLength: apiKey?.length,
+        requestHeaders: {
+          ...req.headers,
+          "x-api-key": "[REDACTED]" // Don't log the actual API key
+        },
+        requestBody: {
+          model: req.body.model,
+          promptLength: req.body.prompt?.length
+        }
+      });
 
       if (!apiKey) {
         return res.status(401).json({ message: "API key is required" });
@@ -121,79 +134,102 @@ export function registerRoutes(app: Express): Server {
 
       switch (provider) {
         case 'google':
-          // Remove 'models/' prefix if present in the model ID
-          const modelId = (req.body.model || 'gemini-pro').replace('models/', '');
-          const url = new URL(`https://generativelanguage.googleapis.com/v1beta/${modelId}:generateContent`);
-          url.searchParams.append("key", apiKey.toString());
+          try {
+            // Remove 'models/' prefix if present in the model ID
+            const modelId = (req.body.model || 'gemini-pro').replace('models/', '');
+            const url = new URL(`https://generativelanguage.googleapis.com/v1beta/${modelId}:generateContent`);
+            url.searchParams.append("key", apiKey.toString());
 
-          console.log("Making request to Gemini API...");
-          response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: req.body.prompt,
-                }],
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 1024,
+            console.log("Backend - Google API request:", {
+              url: url.toString(),
+              modelId,
+              hasApiKey: !!apiKey
+            });
+
+            response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
               },
-            }),
-          });
+              body: JSON.stringify({
+                contents: [{
+                  parts: [{
+                    text: req.body.prompt,
+                  }],
+                }],
+                generationConfig: {
+                  temperature: 0.7,
+                  topK: 40,
+                  topP: 0.95,
+                  maxOutputTokens: 1024,
+                },
+              }),
+            });
+          } catch (error) {
+            console.error("Backend - Google API request error:", {
+              error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : undefined
+            });
+            throw error;
+          }
           break;
 
         case 'openrouter':
-          console.log("Making request to OpenRouter API...");
-          console.log("Request headers:", {
-            Authorization: `Bearer ${apiKey}`,
-            'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-            'X-Title': 'Prompt Template Manager'
-          });
-
-          response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
+          try {
+            console.log("Backend - OpenRouter request headers:", {
+              Authorization: "Bearer [REDACTED]",
               'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-              'X-Title': 'Prompt Template Manager',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: req.body.model || "anthropic/claude-3-haiku",
-              messages: [{
-                role: "user",
-                content: req.body.prompt
-              }],
-              temperature: 0.7,
-              max_tokens: 1024,
-            })
-          });
+              'X-Title': 'Prompt Template Manager'
+            });
+
+            response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+                'X-Title': 'Prompt Template Manager',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: req.body.model || "anthropic/claude-3-haiku",
+                messages: [{
+                  role: "user",
+                  content: req.body.prompt
+                }],
+                temperature: 0.7,
+                max_tokens: 1024,
+              })
+            });
+          } catch (error) {
+            console.error("Backend - OpenRouter API request error:", {
+              error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : undefined
+            });
+            throw error;
+          }
           break;
 
         default:
           throw new Error(`Unsupported provider: ${provider}`);
       }
 
-      console.log("API response status:", response.status);
+      console.log("Backend - API response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`${provider} API error:`, errorText);
+        console.error(`Backend - ${provider} API error:`, {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
         throw new Error(`${provider} API error: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log(`${provider} API response data:`, JSON.stringify(data, null, 2));
+      console.log(`Backend - ${provider} API response data:`, JSON.stringify(data, null, 2));
 
       let enhancedPrompt;
 
-      // Extract the response based on provider
       switch (provider) {
         case 'google':
           if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
@@ -215,8 +251,11 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ enhancedPrompt });
     } catch (error) {
-      console.error("Error enhancing prompt:", error);
-      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      console.error("Backend - Error enhancing prompt:", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
       res.status(500).json({ 
         message: "Failed to enhance prompt",
         details: error instanceof Error ? error.message : String(error)
