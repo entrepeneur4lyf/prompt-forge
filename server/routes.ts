@@ -280,17 +280,25 @@ export function registerRoutes(app: Express): Server {
             try {
               console.log("Backend - OpenRouter request:", {
                 model: req.body.model || "anthropic/claude-3-haiku",
-                hasApiKey: !!apiKey
+                hasApiKey: !!apiKey,
+                apiKeyLength: apiKey?.length
+              });
+
+              const headers = {
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+                'X-Title': 'Prompt Template Manager',
+                'Content-Type': 'application/json',
+              };
+
+              console.log("Backend - OpenRouter headers being sent:", {
+                ...headers,
+                'Authorization': 'Bearer [REDACTED]'
               });
 
               response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${apiKey}`,
-                  'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-                  'X-Title': 'Prompt Template Manager',
-                  'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                   model: req.body.model || "anthropic/claude-3-haiku",
                   messages: [{
@@ -301,10 +309,24 @@ export function registerRoutes(app: Express): Server {
                   max_tokens: 1024,
                 })
               });
+
+              if (!response.ok) {
+                const errorData = await response.text();
+                console.error("Backend - OpenRouter non-OK response:", {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: Object.fromEntries(response.headers.entries()),
+                  error: errorData
+                });
+              }
             } catch (error) {
               console.error("Backend - OpenRouter API request error:", {
                 error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined
+                stack: error instanceof Error ? error.stack : undefined,
+                requestDetails: {
+                  model: req.body.model,
+                  apiKeyPresent: !!apiKey
+                }
               });
               throw error;
             }
