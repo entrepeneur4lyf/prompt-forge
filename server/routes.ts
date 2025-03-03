@@ -297,7 +297,7 @@ export function registerRoutes(app: Express): Server {
                 'Authorization': `Bearer ${apiKey}`,
                 'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
                 'X-Title': 'Prompt Template Manager',
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
               };
 
               console.log("Backend - OpenRouter headers being sent:", {
@@ -314,8 +314,9 @@ export function registerRoutes(app: Express): Server {
                     role: "user",
                     content: req.body.prompt
                   }],
-                  temperature: 0.7,
-                  max_tokens: 1024,
+                  provider: {
+                    sort: 'throughput'
+                  }
                 })
               });
 
