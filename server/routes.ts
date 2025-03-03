@@ -157,7 +157,7 @@ export function registerRoutes(app: Express): Server {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: "anthropic/claude-3-haiku",  
+              model: "anthropic/claude-3-haiku",  // Default to a reliable model
               messages: [{
                 role: "user",
                 content: req.body.prompt
