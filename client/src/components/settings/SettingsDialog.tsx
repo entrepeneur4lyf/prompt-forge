@@ -17,7 +17,7 @@ import { getApiKeys, setApiKeys, SELECTED_PROVIDER, SELECTED_MODEL, StoredApiKey
 import { Model, fetchAllModels } from '@/lib/providers';
 import { LoadingSpinner } from '@/components/ui/loading';
 
-type Provider = 'google' | 'anthropic' | 'openai';
+type Provider = 'google' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter';
 
 interface ProviderConfig {
   name: string;
@@ -32,6 +32,12 @@ const providers: Record<Provider, ProviderConfig> = {
   },
   openai: {
     name: 'OpenAI',
+  },
+  deepseek: {
+    name: 'Deepseek',
+  },
+  openrouter: {
+    name: 'OpenRouter',
   },
 };
 
@@ -48,11 +54,15 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     google: '',
     anthropic: '',
     openai: '',
+    deepseek: '',
+    openrouter: '',
   });
   const [showApiKey, setShowApiKey] = useState<Record<Provider, boolean>>({
     google: false,
     anthropic: false,
     openai: false,
+    deepseek: false,
+    openrouter: false,
   });
   const [models, setModels] = useState<Model[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -148,7 +158,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[475px]">
+      <DialogContent className="sm:max-w-[675px]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
@@ -163,7 +173,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 // Reset selected model when changing provider
                 setSelectedModel('');
               }}
-              className="grid grid-cols-3 gap-4"
+              className="grid grid-cols-5 gap-4"
               data-testid="settings-provider-radio-group"
             >
               {Object.entries(providers).map(([key, { name }]) => (
@@ -211,36 +221,38 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
           <div className="space-y-4">
             <Label>API Keys</Label>
-            {Object.entries(providers).map(([key, { name }]) => (
-              <div key={key} className="space-y-2">
-                <Label>{name} API Key</Label>
-                <div className="relative">
-                  <Input
-                    type={showApiKey[key as Provider] ? 'text' : 'password'}
-                    value={apiKeys[key as Provider]}
-                    onChange={(e) => handleApiKeyChange(key as Provider, e.target.value)}
-                    onBlur={() => handleApiKeyBlur(key as Provider)}
-                    placeholder={`Enter your ${name} API key`}
-                    className="pr-10"
-                    data-testid={`settings-api-key-input-${key}`}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-auto py-1"
-                    onClick={() => toggleApiKeyVisibility(key as Provider)}
-                    data-testid={`settings-api-key-toggle-${key}`}
-                  >
-                    {showApiKey[key as Provider] ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(providers).map(([key, { name }]) => (
+                <div key={key} className="space-y-2">
+                  <Label>{name} API Key</Label>
+                  <div className="relative">
+                    <Input
+                      type={showApiKey[key as Provider] ? 'text' : 'password'}
+                      value={apiKeys[key as Provider]}
+                      onChange={(e) => handleApiKeyChange(key as Provider, e.target.value)}
+                      onBlur={() => handleApiKeyBlur(key as Provider)}
+                      placeholder={`Enter your ${name} API key`}
+                      className="pr-10"
+                      data-testid={`settings-api-key-input-${key}`}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-auto py-1"
+                      onClick={() => toggleApiKeyVisibility(key as Provider)}
+                      data-testid={`settings-api-key-toggle-${key}`}
+                    >
+                      {showApiKey[key as Provider] ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 

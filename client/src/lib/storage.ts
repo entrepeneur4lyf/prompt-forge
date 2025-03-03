@@ -7,6 +7,8 @@ export interface StoredApiKeys {
   google?: string;
   anthropic?: string;
   openai?: string;
+  deepseek?: string;
+  openrouter?: string;
 }
 
 export function getApiKeys(): StoredApiKeys {

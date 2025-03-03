@@ -3,7 +3,7 @@ import { getApiKeys } from './storage';
 export interface Model {
   id: string;
   displayName: string;
-  provider: 'google' | 'anthropic' | 'openai';
+  provider: 'google' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter';
   type: 'chat' | 'completion' | 'other';
 }
 
@@ -51,11 +51,11 @@ export async function fetchAnthropicModels(): Promise<Model[]> {
   const { anthropic: apiKey } = getApiKeys();
   if (!apiKey) return [];
 
-  // Currently, Anthropic's available models are predefined
+  // The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
   return [
     {
-      id: 'claude-3-sonnet-20240229',
-      displayName: 'Claude 3 Sonnet',
+      id: 'claude-3-7-sonnet-20250219',
+      displayName: 'Claude 3.7 Sonnet',
       provider: 'anthropic',
       type: 'chat',
     },
@@ -93,12 +93,70 @@ export async function fetchOpenAIModels(): Promise<Model[]> {
   }
 }
 
+export async function fetchDeepseekModels(): Promise<Model[]> {
+  const { deepseek: apiKey } = getApiKeys();
+  if (!apiKey) return [];
+
+  // Return predefined Deepseek models
+  return [
+    {
+      id: 'deepseek-chat',
+      displayName: 'Deepseek Chat',
+      provider: 'deepseek',
+      type: 'chat',
+    },
+    {
+      id: 'deepseek-coder',
+      displayName: 'Deepseek Coder',
+      provider: 'deepseek',
+      type: 'chat',
+    },
+  ];
+}
+
+export async function fetchOpenRouterModels(): Promise<Model[]> {
+  const { openrouter: apiKey } = getApiKeys();
+  if (!apiKey) return [];
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch OpenRouter models: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data.map((model: any) => ({
+      id: model.id,
+      displayName: model.name || model.id,
+      provider: 'openrouter',
+      type: 'chat',
+    }));
+  } catch (error) {
+    console.error('Error fetching OpenRouter models:', error);
+    return [];
+  }
+}
+
 export async function fetchAllModels(): Promise<Model[]> {
-  const [googleModels, anthropicModels, openaiModels] = await Promise.all([
+  const [googleModels, anthropicModels, openaiModels, deepseekModels, openrouterModels] = await Promise.all([
     fetchGoogleModels(),
     fetchAnthropicModels(),
     fetchOpenAIModels(),
+    fetchDeepseekModels(),
+    fetchOpenRouterModels(),
   ]);
 
-  return [...googleModels, ...anthropicModels, ...openaiModels];
+  return [
+    ...googleModels,
+    ...anthropicModels,
+    ...openaiModels,
+    ...deepseekModels,
+    ...openrouterModels,
+  ];
 }
