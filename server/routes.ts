@@ -134,44 +134,49 @@ export function registerRoutes(app: Express): Server {
 
       switch (provider) {
         case 'google':
-          try {
-            // Use the correct model ID without modification
-            const url = new URL(`https://generativelanguage.googleapis.com/v1/models/${req.body.model}:generateContent`);
-            url.searchParams.append("key", apiKey.toString());
+            try {
+              // Strip the 'models/' prefix if present and format the model name correctly
+              const modelId = req.body.model.replace(/^models\//, '');
+              const url = new URL(`https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent`);
+              url.searchParams.append("key", apiKey.toString());
 
-            console.log("Backend - Google API request:", {
-              url: url.toString().replace(apiKey.toString(), '[REDACTED]'),
-              modelId: req.body.model,
-              hasApiKey: !!apiKey
-            });
+              console.log("Backend - Google API request:", {
+                url: url.toString().replace(apiKey.toString(), '[REDACTED]'),
+                modelId: modelId,
+                hasApiKey: !!apiKey
+              });
 
-            response = await fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [{
-                    text: req.body.prompt,
-                  }],
-                }],
-                generationConfig: {
-                  temperature: 0.7,
-                  topK: 40,
-                  topP: 0.95,
-                  maxOutputTokens: 1024,
+              response = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
                 },
-              }),
-            });
-          } catch (error) {
-            console.error("Backend - Google API request error:", {
-              error: error instanceof Error ? error.message : String(error),
-              stack: error instanceof Error ? error.stack : undefined
-            });
-            throw error;
-          }
-          break;
+                body: JSON.stringify({
+                  contents: [{
+                    parts: [{
+                      text: req.body.prompt,
+                    }],
+                  }],
+                  generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                  },
+                }),
+              });
+            } catch (error) {
+              console.error("Backend - Google API request error:", {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                requestDetails: {
+                  model: req.body.model,
+                  apiKeyPresent: !!apiKey
+                }
+              });
+              throw error;
+            }
+            break;
 
         case 'openrouter':
           try {
