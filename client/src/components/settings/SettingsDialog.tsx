@@ -14,37 +14,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiKeys, setApiKeys, SELECTED_PROVIDER, SELECTED_MODEL, StoredApiKeys } from '@/lib/storage';
+import { Model, fetchAllModels } from '@/lib/providers';
+import { LoadingSpinner } from '@/components/ui/loading';
 
 type Provider = 'google' | 'anthropic' | 'openai';
 
 interface ProviderConfig {
   name: string;
-  models: string[];
 }
 
 const providers: Record<Provider, ProviderConfig> = {
   google: {
     name: 'Google',
-    models: [
-      'gemini-2.0-flash-exp',
-      'gemini-2.0-flash-thinking-exp-1219',
-      'gemini-exp-1206',
-      'gemini-1.5-pro'
-    ],
   },
   anthropic: {
     name: 'Anthropic',
-    models: ['claude-3-sonnet-20240119'],
   },
   openai: {
     name: 'OpenAI',
-    models: [
-      'gpt-4-turbo-preview',
-      'gpt-4',
-      'gpt-3.5-turbo',
-      'o1-2024-12-17',
-      'o1-mini-2024-09-12'
-    ],
   },
 };
 
@@ -67,6 +54,9 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     anthropic: false,
     openai: false,
   });
+  const [models, setModels] = useState<Model[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Load settings from local storage
@@ -79,12 +69,39 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     if (storedApiKeys) {
       setApiKeysState(storedApiKeys);
     }
-
-    // Set default model if none selected
-    if (!storedModel) {
-      setSelectedModel(providers[storedProvider || 'google'].models[0]);
-    }
   }, []);
+
+  useEffect(() => {
+    async function loadModels() {
+      setIsLoadingModels(true);
+      setError(null);
+      try {
+        const allModels = await fetchAllModels();
+        setModels(allModels);
+
+        // Set first available model from selected provider if none selected
+        if (!selectedModel) {
+          const providerModels = allModels.filter(m => m.provider === selectedProvider);
+          if (providerModels.length > 0) {
+            setSelectedModel(providerModels[0].id);
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load models');
+        toast({
+          title: 'Error',
+          description: 'Failed to load available models. Please check your API keys.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingModels(false);
+      }
+    }
+
+    if (open) {
+      loadModels();
+    }
+  }, [open, selectedProvider, toast]);
 
   const handleSave = () => {
     // Save settings to local storage
@@ -106,6 +123,8 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     }));
   };
 
+  const providerModels = models.filter(model => model.provider === selectedProvider);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[475px]">
@@ -120,7 +139,8 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               value={selectedProvider}
               onValueChange={(value: Provider) => {
                 setSelectedProvider(value);
-                setSelectedModel(providers[value].models[0]);
+                // Reset selected model when changing provider
+                setSelectedModel('');
               }}
               className="grid grid-cols-3 gap-4"
               data-testid="settings-provider-radio-group"
@@ -140,18 +160,28 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               value={selectedModel}
               onValueChange={setSelectedModel}
               data-testid="settings-model-select"
+              disabled={isLoadingModels || providerModels.length === 0}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a model" />
+                <SelectValue placeholder={
+                  isLoadingModels ? 'Loading models...' :
+                  error ? 'Failed to load models' :
+                  providerModels.length === 0 ? 'No models available' :
+                  'Select a model'
+                } />
               </SelectTrigger>
               <SelectContent>
-                {providers[selectedProvider].models.map((model) => (
+                {isLoadingModels ? (
+                  <div className="flex items-center justify-center py-2">
+                    <LoadingSpinner className="h-4 w-4" />
+                  </div>
+                ) : providerModels.map((model) => (
                   <SelectItem
-                    key={model}
-                    value={model}
-                    data-testid={`settings-model-option-${model}`}
+                    key={model.id}
+                    value={model.id}
+                    data-testid={`settings-model-option-${model.id}`}
                   >
-                    {model}
+                    {model.displayName}
                   </SelectItem>
                 ))}
               </SelectContent>
