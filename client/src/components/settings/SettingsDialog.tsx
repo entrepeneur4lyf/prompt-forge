@@ -17,7 +17,7 @@ import { getApiKeys, setApiKeys, SELECTED_PROVIDER, SELECTED_MODEL, StoredApiKey
 import { Model, fetchAllModels } from '@/lib/providers';
 import { LoadingSpinner } from '@/components/ui/loading';
 
-type Provider = 'google' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter';
+type Provider = 'google' | 'anthropic' | 'openai' | 'deepseek';
 
 interface ProviderConfig {
   name: string;
@@ -36,9 +36,6 @@ const providers: Record<Provider, ProviderConfig> = {
   deepseek: {
     name: 'Deepseek',
   },
-  openrouter: {
-    name: 'OpenRouter',
-  },
 };
 
 interface SettingsDialogProps {
@@ -55,14 +52,12 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     anthropic: '',
     openai: '',
     deepseek: '',
-    openrouter: '',
   });
   const [showApiKey, setShowApiKey] = useState<Record<Provider, boolean>>({
     google: false,
     anthropic: false,
     openai: false,
     deepseek: false,
-    openrouter: false,
   });
   const [models, setModels] = useState<Model[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -72,7 +67,6 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     anthropic: false,
     openai: false,
     deepseek: false,
-    openrouter: false,
   });
 
   const loadModels = useCallback(async () => {

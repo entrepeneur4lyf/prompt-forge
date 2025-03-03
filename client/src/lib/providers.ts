@@ -3,7 +3,7 @@ import { getApiKeys } from './storage';
 export interface Model {
   id: string;
   displayName: string;
-  provider: 'google' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter';
+  provider: 'google' | 'anthropic' | 'openai' | 'deepseek';
   type: 'chat' | 'completion' | 'other';
 }
 
@@ -114,51 +114,12 @@ export async function fetchDeepseekModels(): Promise<Model[]> {
   ];
 }
 
-export async function fetchOpenRouterModels(): Promise<Model[]> {
-  const { openrouter: apiKey } = getApiKeys();
-  if (!apiKey) return [];
-
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': window.location.origin, // Required by OpenRouter
-        'X-Title': 'Prompt Template Manager', // Required by OpenRouter
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', errorText);
-      return [];
-    }
-
-    const data = await response.json();
-    if (!data.data || !Array.isArray(data.data)) {
-      console.error('Unexpected OpenRouter API response format:', data);
-      return [];
-    }
-
-    return data.data.map((model: any) => ({
-      id: model.id,
-      displayName: model.name || model.id,
-      provider: 'openrouter',
-      type: 'chat',
-    }));
-  } catch (error) {
-    console.error('Error fetching OpenRouter models:', error);
-    return [];
-  }
-}
-
 export async function fetchAllModels(): Promise<Model[]> {
-  const [googleModels, anthropicModels, openaiModels, deepseekModels, openrouterModels] = await Promise.all([
+  const [googleModels, anthropicModels, openaiModels, deepseekModels] = await Promise.all([
     fetchGoogleModels(),
     fetchAnthropicModels(),
     fetchOpenAIModels(),
     fetchDeepseekModels(),
-    fetchOpenRouterModels(),
   ]);
 
   return [
@@ -166,6 +127,5 @@ export async function fetchAllModels(): Promise<Model[]> {
     ...anthropicModels,
     ...openaiModels,
     ...deepseekModels,
-    ...openrouterModels,
   ];
 }
