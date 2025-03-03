@@ -152,12 +152,12 @@ export function registerRoutes(app: Express): Server {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-              'X-Title': 'Prompt Template Manager',
+              'HTTP-Referer': req.headers.origin || 'http://localhost:5000', 
+              'X-Title': 'Prompt Template Manager', 
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: "anthropic/claude-3-haiku",  // Default to a reliable model
+              model: "anthropic/claude-3-haiku",  
               messages: [{
                 role: "user",
                 content: req.body.prompt
@@ -168,7 +168,6 @@ export function registerRoutes(app: Express): Server {
           });
           break;
 
-        // Add other providers here as needed
         default:
           throw new Error(`Unsupported provider: ${provider}`);
       }
