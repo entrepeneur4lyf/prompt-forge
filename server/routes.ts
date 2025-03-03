@@ -110,7 +110,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/enhance", async (req, res) => {
     try {
       const apiKey = req.headers["x-api-key"];
-      const provider = req.body.provider || 'google';
+      const provider = req.headers["x-provider"] || 'google';
       console.log("Enhance request received. Provider:", provider, "API key present:", !!apiKey);
 
       if (!apiKey) {
@@ -148,16 +148,22 @@ export function registerRoutes(app: Express): Server {
 
         case 'openrouter':
           console.log("Making request to OpenRouter API...");
+          console.log("Request headers:", {
+            Authorization: `Bearer ${apiKey}`,
+            'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+            'X-Title': 'Prompt Template Manager'
+          });
+
           response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': req.headers.origin || 'http://localhost:5000', 
-              'X-Title': 'Prompt Template Manager', 
+              'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+              'X-Title': 'Prompt Template Manager',
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: "anthropic/claude-3-haiku",  // Default to a reliable model
+              model: req.body.model || "anthropic/claude-3-haiku",
               messages: [{
                 role: "user",
                 content: req.body.prompt

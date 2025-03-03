@@ -1,5 +1,5 @@
 import { GeminiResponse, Template, CreateTemplateInput, UpdateTemplateInput } from './types';
-import { getApiKeys, getSelectedProviderApiKey, SELECTED_PROVIDER } from './storage';
+import { getApiKeys, SELECTED_PROVIDER, SELECTED_MODEL } from './storage';
 
 const API_BASE = '/api';
 
@@ -63,6 +63,7 @@ export async function deleteTemplate(id: number): Promise<void> {
 
 export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   const selectedProvider = localStorage.getItem(SELECTED_PROVIDER) || 'google';
+  const selectedModel = localStorage.getItem(SELECTED_MODEL);
   const keys = getApiKeys();
   const apiKey = keys[selectedProvider as keyof typeof keys];
 
@@ -83,6 +84,7 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
       body: JSON.stringify({ 
         prompt,
         provider: selectedProvider,
+        model: selectedModel
       })
     });
 

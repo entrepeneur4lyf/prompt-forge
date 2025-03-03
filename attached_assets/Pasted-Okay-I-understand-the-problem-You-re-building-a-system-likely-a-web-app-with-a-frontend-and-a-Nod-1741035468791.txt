@@ -1,0 +1,366 @@
+Okay, I understand the problem. You're building a system (likely a web app with a frontend and a Node.js backend) where users can enhance prompts using an LLM (like OpenAI, Anthropic, etc.) via OpenRouter. The frontend collects the user's API key, but it's not being correctly passed to the backend, resulting in a 401 Unauthorized error from OpenRouter.
+
+Here's a breakdown of the problem, a troubleshooting approach, and example code (TypeScript and Node.js) to illustrate the solutions:
+
+**1. Understanding the Problem**
+
+*   **401 Unauthorized:** This HTTP status code means the request lacks valid authentication credentials.  In this context, OpenRouter isn't receiving a valid API key.
+*   **Frontend/Backend Communication:**  The core issue is the breakdown in how the API key is transmitted from the user's input on the frontend to your backend's request to OpenRouter.
+*   **Key Storage and Transmission:**  You *must* handle API keys securely. Never store them directly in client-side code.  The key needs to be sent securely from the frontend to the backend, and *only* used on the backend.
+* **Prompt Enhancement Process** The enhance prompt is going through correctly, the key is not.
+
+**2. Troubleshooting Steps and Solutions**
+
+Here's a step-by-step approach to fix this:
+
+*   **Step 1: Verify Frontend Key Collection (Frontend - TypeScript)**
+
+    *   **Check Input:** Make sure your frontend form correctly captures the API key. Use your browser's developer tools (Network tab) to inspect the request payload sent to your backend.  Verify the key is *actually* present in the data you're sending.
+
+    ```typescript
+    // Example (using React - adapt to your framework):
+    import React, { useState } from 'react';
+
+    function MyComponent() {
+        const [apiKey, setApiKey] = useState('');
+        const [prompt, setPrompt] = useState('');
+        const [enhancedPrompt, setEnhancedPrompt] = useState('');
+        const [error, setError] = useState('');
+
+        const handleSubmit = async (event: React.FormEvent) => {
+            event.preventDefault();
+            setError('');
+            setEnhancedPrompt('');
+
+            try {
+                const response = await fetch('/api/enhance', {  // Correct API endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ apiKey, prompt }), // Send both key and prompt
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    setError(errorData.message || 'An error occurred.');
+                    return;
+                }
+
+                const data = await response.json();
+                setEnhancedPrompt(data.enhancedPrompt);
+
+            } catch (err) {
+                setError('Network error or server down.');
+                console.error(err);
+            }
+        };
+
+        return (
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="apiKey">OpenRouter API Key:</label>
+                    <input
+                        type="password" // Use password type for security
+                        id="apiKey"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="prompt">Prompt:</label>
+                    <textarea
+                        id="prompt"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Enhance Prompt</button>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {enhancedPrompt && <p>Enhanced Prompt: {enhancedPrompt}</p>}
+            </form>
+        );
+    }
+
+    export default MyComponent;
+    ```
+
+*   **Step 2: Securely Transmit the Key (Frontend to Backend)**
+
+    *   **HTTPS:**  *Always* use HTTPS to encrypt the communication between the frontend and backend.  This is fundamental for security.
+    *   **POST Request:** Send the API key in the *body* of a POST request, *not* in the URL query parameters.  Query parameters can be logged and are less secure.  The example above demonstrates this.
+
+*   **Step 3: Backend API Endpoint (Backend - Node.js with Express)**
+
+    *   **Receive the Key:** Your backend endpoint needs to correctly extract the API key from the request body.
+    *   **Environment Variables (IMPORTANT):**  *Never* hardcode API keys directly in your backend code.  Use environment variables to store them securely.  Load them using a library like `dotenv`.
+    *   **OpenRouter Request:** Make the request to OpenRouter, including the API key in the `Authorization` header.
+    *   **Error Handling:** Implement proper error handling to catch issues from OpenRouter and your own logic.
+    * **CORS (Cross-Origin Resource Sharing):** If your frontend and backend are on different domains, make sure you have CORS configured correctly on your backend.
+
+    ```typescript
+    // Backend (Node.js with Express and dotenv)
+    import express from 'express';
+    import fetch from 'node-fetch'; // Or use axios, got, etc.
+    import dotenv from 'dotenv';
+    import cors from 'cors';
+
+    dotenv.config(); // Load environment variables from .env file
+
+    const app = express();
+    const port = process.env.PORT || 3001;
+
+    // Enable CORS for all origins (for development - configure more restrictively for production)
+    app.use(cors());
+    app.use(express.json()); // Parse JSON request bodies
+
+    app.post('/api/enhance', async (req, res) => {
+        try {
+            const { apiKey, prompt } = req.body;
+
+            if (!apiKey || !prompt) {
+                return res.status(400).json({ message: 'API key and prompt are required.' });
+            }
+
+            const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`, // Use the received API key
+                    'Content-Type': 'application/json',
+                    // Add any other required headers for OpenRouter
+                    'HTTP-Referer': 'http://localhost:3000', // Add security requirements
+                    'X-Title': 'My Prompt Enhancer',
+                },
+                body: JSON.stringify({
+                   model: "mistralai/mistral-medium", // Hardcoded for example - get from request
+                    messages: [
+                      {
+                        "role": "user",
+                        "content": prompt
+                      }
+                    ],
+                    // Add other OpenRouter parameters as needed
+                }),
+            });
+
+            if (!openRouterResponse.ok) {
+                // Handle OpenRouter errors
+                const errorData = await openRouterResponse.json();
+                console.error("OpenRouter API Error:", errorData); // Log the full error
+                return res.status(openRouterResponse.status).json({ message: 'Failed to enhance prompt', details: errorData });
+            }
+
+            const data = await openRouterResponse.json();
+            const enhancedPrompt = data.choices[0].message.content; // Adjust based on OpenRouter's response structure
+
+            res.json({ enhancedPrompt });
+
+        } catch (error) {
+            console.error('Server Error:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+
+    app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    });
+    ```
+
+*   **Step 4:  .env File (Backend)**
+
+    Create a `.env` file in your backend project's root directory:
+    ```
+    # .env (DO NOT COMMIT THIS FILE TO SOURCE CONTROL)
+    #  These are not needed, because the user provides, but are good for testing.
+    # OPENROUTER_API_KEY=your_openrouter_api_key 
+    PORT=3001
+    ```
+
+*   **Step 5:  Run and Test**
+    * Start your backend server (`node index.js` or `npm start`).
+    * Start your frontend development server.
+    * Test the entire flow, entering an API key and a prompt in your frontend.
+
+**3. Key Improvements and Explanations**
+
+*   **`dotenv`:** This package loads environment variables from a `.env` file.  This is crucial for keeping your API keys out of your code.
+*   **`express.json()`:**  This middleware parses incoming requests with JSON payloads and makes them available in `req.body`.
+*   **`Authorization` Header:**  The OpenRouter API (and most APIs) require the API key to be sent in the `Authorization` header as a "Bearer" token.
+*   **Error Handling:** The code includes error handling for:
+    *   Missing API key or prompt.
+    *   Errors from the OpenRouter API.
+    *   General server errors.
+*   **CORS:**  The `cors()` middleware is included.  If your frontend and backend are on different origins (e.g., `localhost:3000` and `localhost:3001`), you *need* CORS.  The example allows all origins, which is suitable for development.  For production, configure it to only allow your frontend's origin.
+*   **Type Safety (TypeScript):**  The code uses TypeScript for better type safety and error checking.
+*   **Asynchronous Operations:** The code uses `async/await` for cleaner asynchronous code.
+* **Security Headers**:  I have added two headers that OpenRouter recommends including, `HTTP-Referer` and `X-Title`.
+
+**4. Complete, Concise Example (Combined)**
+
+This combines the frontend and backend into a single, runnable example.  You'll need to create two files: `frontend.tsx` and `backend.ts`, and have Node.js, npm, and the necessary packages installed (`express`, `node-fetch`, `dotenv`, `cors`, `@types/express`, `@types/node`, `typescript`). You will also need a React project set up for the frontend.
+
+**frontend.tsx (React - adjust for your framework):**
+
+```typescript
+// (Same as the frontend example in Step 1)
+import React, { useState } from 'react';
+
+function MyComponent() {
+    const [apiKey, setApiKey] = useState('');
+    const [prompt, setPrompt] = useState('');
+    const [enhancedPrompt, setEnhancedPrompt] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setError('');
+        setEnhancedPrompt('');
+
+        try {
+            const response = await fetch('/api/enhance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ apiKey, prompt }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setError(errorData.message || 'An error occurred.');
+                return;
+            }
+
+            const data = await response.json();
+            setEnhancedPrompt(data.enhancedPrompt);
+
+        } catch (err) {
+            setError('Network error or server down.');
+            console.error(err);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <label htmlFor="apiKey">OpenRouter API Key:</label>
+                <input
+                    type="password"
+                    id="apiKey"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    required
+                />
+            </div>
+            <div>
+                <label htmlFor="prompt">Prompt:</label>
+                <textarea
+                    id="prompt"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    required
+                />
+            </div>
+            <button type="submit">Enhance Prompt</button>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {enhancedPrompt && <p>Enhanced Prompt: {enhancedPrompt}</p>}
+        </form>
+    );
+}
+
+export default MyComponent;
+
+```
+
+**backend.ts (Node.js/Express):**
+
+```typescript
+// Backend (Node.js with Express and dotenv)
+import express from 'express';
+import fetch from 'node-fetch'; // Or use axios, got, etc.
+import dotenv from 'dotenv';
+import cors from 'cors';
+
+dotenv.config(); // Load environment variables from .env file
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+// Enable CORS for all origins (for development - configure more restrictively for production)
+app.use(cors());
+app.use(express.json()); // Parse JSON request bodies
+
+app.post('/api/enhance', async (req, res) => {
+    try {
+        const { apiKey, prompt } = req.body;
+
+        if (!apiKey || !prompt) {
+            return res.status(400).json({ message: 'API key and prompt are required.' });
+        }
+
+        const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`, // Use the received API key
+                'Content-Type': 'application/json',
+                // Add any other required headers for OpenRouter
+                'HTTP-Referer': 'http://localhost:3000', // Replace with your frontend URL
+                'X-Title': 'My Prompt Enhancer',
+            },
+            body: JSON.stringify({
+                model: "mistralai/mistral-medium", // Hardcoded for example- get from request
+                messages: [
+                  {
+                    "role": "user",
+                    "content": prompt
+                  }
+                ],
+                // Add other OpenRouter parameters as needed
+            }),
+        });
+
+        if (!openRouterResponse.ok) {
+            // Handle OpenRouter errors
+            const errorData = await openRouterResponse.json();
+            console.error("OpenRouter API Error:", errorData); // Log the full error
+            return res.status(openRouterResponse.status).json({ message: 'Failed to enhance prompt', details: errorData });
+        }
+
+        const data = await openRouterResponse.json();
+        const enhancedPrompt = data.choices[0].message.content; // Adjust based on OpenRouter's response structure
+
+        res.json({ enhancedPrompt });
+
+    } catch (error) {
+        console.error('Server Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+});
+```
+
+**.env (in backend directory):**
+
+```
+# .env (DO NOT COMMIT THIS FILE TO SOURCE CONTROL)
+PORT=3001
+```
+**To run this:**
+
+1.  **Backend:**
+    *   `cd` into your backend directory.
+    *   `npm install express node-fetch dotenv cors typescript @types/express @types/node`
+    *   `npx tsc backend.ts`  (Compiles TypeScript to JavaScript)
+    *   `node backend.js`
+
+2.  **Frontend:**
+    *    `cd` into your frontend directory
+    *   `npm install`
+    *    Start you development server. (Usually `npm start`)
+
+This comprehensive guide addresses the problem thoroughly, providing clear steps, code examples, and explanations to help you get your prompt enhancement feature working correctly and securely. Remember to adapt the code to your specific project structure and framework.  The crucial part is ensuring the API key is securely transmitted from the frontend and correctly used in the backend's request to OpenRouter. Remember to replace the hardcoded model with the model selected by the user.
