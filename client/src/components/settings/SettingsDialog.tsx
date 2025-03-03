@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,32 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadModels = useCallback(async () => {
+    setIsLoadingModels(true);
+    setError(null);
+    try {
+      const allModels = await fetchAllModels();
+      setModels(allModels);
+
+      // Set first available model from selected provider if none selected
+      if (!selectedModel) {
+        const providerModels = allModels.filter(m => m.provider === selectedProvider);
+        if (providerModels.length > 0) {
+          setSelectedModel(providerModels[0].id);
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load models');
+      toast({
+        title: 'Error',
+        description: 'Failed to load available models. Please check your API keys.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingModels(false);
+    }
+  }, [selectedProvider, toast, selectedModel]);
+
   useEffect(() => {
     // Load settings from local storage
     const storedProvider = localStorage.getItem(SELECTED_PROVIDER) as Provider;
@@ -72,36 +98,10 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   }, []);
 
   useEffect(() => {
-    async function loadModels() {
-      setIsLoadingModels(true);
-      setError(null);
-      try {
-        const allModels = await fetchAllModels();
-        setModels(allModels);
-
-        // Set first available model from selected provider if none selected
-        if (!selectedModel) {
-          const providerModels = allModels.filter(m => m.provider === selectedProvider);
-          if (providerModels.length > 0) {
-            setSelectedModel(providerModels[0].id);
-          }
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load models');
-        toast({
-          title: 'Error',
-          description: 'Failed to load available models. Please check your API keys.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoadingModels(false);
-      }
-    }
-
     if (open) {
       loadModels();
     }
-  }, [open, selectedProvider, toast]);
+  }, [open, loadModels]);
 
   const handleSave = () => {
     // Save settings to local storage
@@ -121,6 +121,27 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       ...prev,
       [provider]: !prev[provider],
     }));
+  };
+
+  const handleApiKeyChange = (provider: Provider, value: string) => {
+    setApiKeysState(prev => ({
+      ...prev,
+      [provider]: value,
+    }));
+  };
+
+  const handleApiKeyBlur = async (provider: Provider) => {
+    // Save the API key immediately when the field loses focus
+    const updatedKeys = {
+      ...apiKeys,
+      [provider]: apiKeys[provider],
+    };
+    setApiKeys(updatedKeys);
+
+    // Fetch models if this is the selected provider
+    if (provider === selectedProvider) {
+      await loadModels();
+    }
   };
 
   const providerModels = models.filter(model => model.provider === selectedProvider);
@@ -173,7 +194,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               <SelectContent>
                 {isLoadingModels ? (
                   <div className="flex items-center justify-center py-2">
-                    <LoadingSpinner className="h-4 w-4" />
+                    <LoadingSpinner />
                   </div>
                 ) : providerModels.map((model) => (
                   <SelectItem
@@ -197,12 +218,8 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   <Input
                     type={showApiKey[key as Provider] ? 'text' : 'password'}
                     value={apiKeys[key as Provider]}
-                    onChange={(e) =>
-                      setApiKeysState(prev => ({
-                        ...prev,
-                        [key]: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => handleApiKeyChange(key as Provider, e.target.value)}
+                    onBlur={() => handleApiKeyBlur(key as Provider)}
                     placeholder={`Enter your ${name} API key`}
                     className="pr-10"
                     data-testid={`settings-api-key-input-${key}`}
