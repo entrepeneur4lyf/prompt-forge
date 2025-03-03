@@ -135,14 +135,13 @@ export function registerRoutes(app: Express): Server {
       switch (provider) {
         case 'google':
           try {
-            // Remove 'models/' prefix and use the base model if experimental one isn't available
-            const modelId = 'gemini-pro'; // Default to stable model
-            const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`);
+            // Use the correct endpoint structure for Google's API
+            const url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent");
             url.searchParams.append("key", apiKey.toString());
 
             console.log("Backend - Google API request:", {
               url: url.toString().replace(apiKey.toString(), '[REDACTED]'),
-              modelId,
+              modelId: 'gemini-pro',
               hasApiKey: !!apiKey
             });
 
