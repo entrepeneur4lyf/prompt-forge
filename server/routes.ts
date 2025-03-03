@@ -278,10 +278,9 @@ export function registerRoutes(app: Express): Server {
 
         case 'openrouter':
           try {
-            console.log("Backend - OpenRouter request headers:", {
-              Authorization: "Bearer [REDACTED]",
-              'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-              'X-Title': 'Prompt Template Manager'
+            console.log("Backend - OpenRouter request:", {
+              model: req.body.model || "anthropic/claude-3-haiku",
+              hasApiKey: !!apiKey
             });
 
             response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
