@@ -1,0 +1,245 @@
+Okay, I'll update the prompt to support fetching and displaying models from Google Vertex AI, Anthropic, and OpenAI, using TypeScript. This requires a more modular approach, as each provider has its own API and authentication method.
+
+**Key Changes and Additions:**
+
+1.  **Modular Structure:** The prompt will instruct the agent to create separate functions (or classes) for interacting with each API (Google, Anthropic, OpenAI). This promotes code organization and maintainability.
+
+2.  **TypeScript Types:**  The prompt will encourage the use of TypeScript types to define the structure of model data received from each API. This improves code clarity and helps prevent errors.
+
+3.  **Asynchronous Operations:**  Fetching data from APIs is inherently asynchronous. The prompt will emphasize the use of `async/await` in TypeScript for handling these operations.
+
+4.  **Unified Model Representation:** We'll define a common interface (or type) to represent a model, regardless of its source.  This will make it easier to work with models from different providers in a consistent way.
+
+5.  **Environment Variables:**  The prompt will explicitly state how to access API keys and other configuration settings (e.g., organization IDs) through environment variables.
+
+6. **Anthropic and OpenAI API details:** Includes prompt details about the API and the models.
+
+7.  **Dropdown Handling (Generalized):** The dropdown handling logic will be generalized to work with models from any provider.
+
+**Improved Replit Agent Prompt (TypeScript):**
+
+```
+You are a Replit Agent tasked with developing and maintaining a prompt management application.  A critical feature is the ability to select different AI models from various providers (Google Vertex AI, Anthropic, and OpenAI) for use in prompts.
+
+The application currently has an issue with hardcoded model lists. Your task is to replace these with a dynamic system that fetches available models directly from each provider's API. Use TypeScript for all code.
+
+1.  **Modular Design:**
+    *   Create separate modules (files or classes) for each AI provider: `google.ts`, `anthropic.ts`, and `openai.ts`.
+    *   Each module should contain functions for:
+        *   Authentication (if needed).
+        *   Fetching the list of available models.
+        *   Transforming the API response into a unified model format (see step 4).
+
+2.  **TypeScript Types:**
+    *   Define a TypeScript interface `AIModel` to represent a model, regardless of the provider:
+
+        ```typescript
+        interface AIModel {
+          id: string; // Unique identifier (provider-specific)
+          displayName: string; // Human-readable name
+          provider: 'google' | 'anthropic' | 'openai'; // Source of the model
+          type: 'chat' | 'completion' | 'other'; // Add other types if necessary
+        }
+        ```
+
+    *   Define types for the specific responses you get from *each* API *before* you transform them into the `AIModel` format.  This helps with type safety. For instance:
+
+      ```typescript
+      // google.ts
+      interface GoogleVertexModel {
+          name: string;
+          displayName: string;
+          supportedGenerationMethods: string[];
+      }
+
+      // anthropic.ts
+      interface AnthropicModel {
+          model: string; // or whatever fields Anthropic's API returns
+          // ... other Anthropic-specific fields
+      }
+      // openai.ts
+      interface OpenAIModel {
+          id: string;
+          // ...other fields.
+      }
+      ```
+
+3.  **Asynchronous Operations:**
+    *   Use `async/await` for all API interactions.
+    *   Use `try...catch` blocks to handle potential errors (network issues, API errors, etc.).
+
+4.  **Unified Model Representation:**
+    *   Each provider module should have a function (e.g., `getModels`) that returns a `Promise<AIModel[]>`.  This function should:
+        *   Fetch models from the provider's API.
+        *   Transform the raw API response into an array of `AIModel` objects.
+
+5.  **Environment Variables:**
+    *   Access API keys and other configuration settings through environment variables:
+        *   `GOOGLE_CLOUD_PROJECT`: Google Cloud project ID.
+        *   `ANTHROPIC_API_KEY`: Anthropic API key.
+        *   `OPENAI_API_KEY`: OpenAI API key.
+        *   `OPENAI_ORGANIZATION_ID` (optional): OpenAI organization ID (if required).
+    * Use `process.env.VARIABLE_NAME` to access the environment variables.
+
+6.  **API Details and Implementation (Provider-Specific):**
+
+    *   **Google Vertex AI:**
+        *   API Endpoint: `GET https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/google/models`
+        *   Authentication: Use the `google-auth-library` or `@google-cloud/aiplatform`. Assume a function `getGoogleCredentials()` exists that returns credentials.
+        *   Project ID:  Get from `process.env.GOOGLE_CLOUD_PROJECT`.
+        *   Region: Assume `us-central1` initially, but consider making this configurable.
+        *   Filter by `supportedGenerationMethods` (like before) to determine `type`.
+        * Example (google.ts):
+           ```typescript
+            import { GoogleAuth } from 'google-auth-library';
+
+            async function getModels(): Promise<AIModel[]> {
+                // ... authentication (similar to Python example, but using google-auth-library) ...
+                const auth = new GoogleAuth({
+                    scopes: '[https://www.googleapis.com/auth/cloud-platform](https://www.google.com/search?q=https://www.googleapis.com/auth/cloud-platform)'
+                });
+                const projectId = process.env.GOOGLE_CLOUD_PROJECT;
+                const region = 'us-central1';
+                const url = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models`;
+                const client = await auth.getClient();
+                const res = await client.request({url});
+
+                const googleModels: GoogleVertexModel[] = res.data.models; // Assuming 'models' is the array
+
+                return googleModels.map(model => ({
+                    id: model.name,
+                    displayName: model.displayName,
+                    provider: 'google',
+                    type: model.supportedGenerationMethods.includes('chat') ? 'chat' : 'completion', //Simplified
+                }));
+            }
+            ```
+
+    *   **Anthropic:**
+        *   API Endpoint: `GET https://api.anthropic.com/v1/models`
+        *   Authentication: Use the `Authorization: Bearer YOUR_API_KEY` header.
+        *   API Key: Get from `process.env.ANTHROPIC_API_KEY`.
+        *   Type determination will be provider specific based on names, or other fields.
+
+          ```typescript
+          // anthropic.ts
+          async function getModels(): Promise<AIModel[]> {
+              const apiKey = process.env.ANTHROPIC_API_KEY;
+              if (!apiKey) {
+                  throw new Error("ANTHROPIC_API_KEY not set");
+              }
+
+              const response = await fetch('[https://api.anthropic.com/v1/models](https://api.anthropic.com/v1/models)', {
+                  headers: {
+                      'Authorization': `Bearer ${apiKey}`,
+                      'anthropic-version': '2023-06-01', //Important to include
+                      'Content-Type': 'application/json'
+                  },
+              });
+
+              if (!response.ok) {
+                  throw new Error(`Anthropic API error: ${response.status} ${await response.text()}`);
+              }
+
+              const data = await response.json();
+              const anthropicModels: AnthropicModel[] = data.models; // Assuming 'models' is array.
+              return anthropicModels.map(model => ({ //Map this based on the actual response
+                    id: model.model, //Example.
+                    displayName: model.model, //Example.
+                    provider: 'anthropic',
+                    type: model.model.startsWith('claude-3') ? 'chat' : 'other', //Example.
+                }));
+
+          }
+          ```
+
+    *   **OpenAI:**
+        *   API Endpoint: `GET https://api.openai.com/v1/models`
+        *   Authentication: Use the `Authorization: Bearer YOUR_API_KEY` header.
+        *   API Key: Get from `process.env.OPENAI_API_KEY`.
+        *   Organization ID (optional): Get from `process.env.OPENAI_ORGANIZATION_ID` if needed.  Include it in the headers as `OpenAI-Organization: YOUR_ORG_ID`.
+          ```typescript
+          // openai.ts
+          async function getModels(): Promise<AIModel[]> {
+             const apiKey = process.env.OPENAI_API_KEY;
+              if (!apiKey) {
+                  throw new Error("OPENAI_API_KEY not set");
+              }
+              const orgId = process.env.OPENAI_ORGANIZATION_ID;
+
+              const headers: Record<string, string> = {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+              };
+              if(orgId) {
+                headers['OpenAI-Organization'] = orgId;
+              }
+
+              const response = await fetch('[https://api.openai.com/v1/models](https://api.openai.com/v1/models)', {
+                  headers: headers
+              });
+               if (!response.ok) {
+                  throw new Error(`OpenAI API error: ${response.status} ${await response.text()}`);
+              }
+              const data = await response.json();
+              const openaiModels : OpenAIModel[] = data.data; //Key is data, not models.
+              return openaiModels.map(model => ({
+                    id: model.id,
+                    displayName: model.id,
+                    provider: 'openai',
+                    type: model.id.includes('gpt') ? 'chat': 'other', //Determine based on model id.
+                }));
+          }
+          ```
+
+7.  **Dropdown Handling:**
+    *   Create a function `updateDropdowns` that:
+        *   Calls `getModels()` for each provider.
+        *   Combines the results into a single array of `AIModel` objects.
+        *   Filters this array based on the desired `type` (e.g., 'chat', 'completion').
+        *   Populates the appropriate dropdown menu with the filtered models. Use the `id` as value, `displayName` as the text.
+         * Example
+         ```typescript
+         async function updateDropdowns() {
+
+             const googleModels = await google.getModels(); //Assumes google module exports getModels.
+             const anthropicModels = await anthropic.getModels();
+             const openaiModels = await openai.getModels();
+
+             const allModels = [...googleModels, ...anthropicModels, ...openaiModels];
+
+              //Get Dropdown elements
+              const chatDropdown = document.querySelector("#chat-model-dropdown") as HTMLSelectElement;
+              const completionDropdown = document.querySelector("#completion-model-dropdown") as HTMLSelectElement;
+              if(!chatDropdown || ! completionDropdown) {
+                console.error("Could not find dropdown elements");
+                return;
+              }
+
+              function populateDropdown(models: AIModel[], dropdown: HTMLSelectElement) {
+                dropdown.innerHTML = ""; // Clear existing options.
+                for(const model of models) {
+                    const option = document.createElement("option");
+                    option.value = model.id;
+                    option.text = model.displayName;
+                    dropdown.appendChild(option);
+                }
+              }
+              const chatModels = allModels.filter(m=> m.type === 'chat');
+              const completionModels = allModels.filter(m=> m.type === 'completion');
+
+              populateDropdown(chatModels, chatDropdown);
+              populateDropdown(completionModels, completionDropdown);
+
+         }
+         ```
+
+8.  **Initial Load and Refresh:**
+    *   Call `updateDropdowns()` when the application loads.
+    *   Add a button (or other UI element) that allows the user to manually refresh the model lists.  This button should also call `updateDropdowns()`.
+
+9. **Error Handling**: In all API calls, wrap in `try...catch` blocks, log errors, and display user-friendly error messages.
+
+10. **Testing**: Thoroughly test model retrieval, filtering, and dropdown population for all supported types and providers. Test error states.
+
+This significantly improved prompt gives the agent the structure, tools, and specific instructions needed to implement the dynamic model loading feature in TypeScript, supporting multiple providers. It emphasizes modularity, type safety, and asynchronous operations, which are crucial for a robust and maintainable solution. Remember to fill in any placeholder sections (indicated by comments) with your application's actual DOM selectors, error handling logic, and so on.
