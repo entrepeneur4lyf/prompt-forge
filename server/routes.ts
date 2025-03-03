@@ -211,6 +211,38 @@ export function registerRoutes(app: Express): Server {
             }
             break;
 
+        case 'deepseek':
+            try {
+              console.log("Backend - DeepSeek request:", {
+                model: req.body.model,
+                hasApiKey: !!apiKey
+              });
+
+              response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                  model: req.body.model,
+                  messages: [{
+                    role: 'user',
+                    content: req.body.prompt
+                  }],
+                  temperature: 0.7,
+                  max_tokens: 1024
+                })
+              });
+            } catch (error) {
+              console.error("Backend - DeepSeek API request error:", {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+              });
+              throw error;
+            }
+            break;
+
         case 'anthropic':
             try {
               // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
@@ -335,6 +367,13 @@ export function registerRoutes(app: Express): Server {
             throw new Error("Unexpected response format from Anthropic API");
           }
           enhancedPrompt = data.content[0].text;
+          break;
+
+        case 'deepseek':
+          if (!data.choices?.[0]?.message?.content) {
+            throw new Error("Unexpected response format from DeepSeek API");
+          }
+          enhancedPrompt = data.choices[0].message.content;
           break;
 
         case 'openrouter':
