@@ -141,7 +141,7 @@ export function registerRoutes(app: Express): Server {
             url.searchParams.append("key", apiKey.toString());
 
             console.log("Backend - Google API request:", {
-              url: url.toString(),
+              url: url.toString().replace(apiKey.toString(), '[REDACTED]'),
               modelId,
               hasApiKey: !!apiKey
             });
@@ -217,12 +217,27 @@ export function registerRoutes(app: Express): Server {
 
       if (!response.ok) {
         const errorText = await response.text();
+        let errorDetails;
+
+        try {
+          // Try to parse the error as JSON
+          errorDetails = JSON.parse(errorText);
+        } catch {
+          // If not JSON, use the raw text
+          errorDetails = errorText;
+        }
+
         console.error(`Backend - ${provider} API error:`, {
           status: response.status,
           statusText: response.statusText,
-          error: errorText
+          error: errorDetails
         });
-        throw new Error(`${provider} API error: ${errorText}`);
+
+        throw new Error(JSON.stringify({
+          provider,
+          status: response.status,
+          error: errorDetails
+        }));
       }
 
       const data = await response.json();
