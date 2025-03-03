@@ -67,7 +67,7 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   const keys = getApiKeys();
   const apiKey = keys[selectedProvider as keyof typeof keys];
 
-  console.log('API Key present:', !!apiKey, 'Provider:', selectedProvider);
+  console.log('API Key present:', !!apiKey, 'Provider:', selectedProvider, 'Model:', selectedModel);
 
   if (!apiKey) {
     throw new Error('API key not found for the selected provider. Please add your API key in settings.');
@@ -83,7 +83,6 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
       },
       body: JSON.stringify({ 
         prompt,
-        provider: selectedProvider,
         model: selectedModel
       })
     });
