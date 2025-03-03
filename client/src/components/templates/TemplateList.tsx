@@ -266,9 +266,9 @@ export default function TemplateList({
   };
 
   return (
-    <Card className="flex flex-col h-[calc(100vh-12rem)]" data-testid="template-list-card">
-      <div className="p-6 space-y-5 flex-1 flex flex-col">
-        <div className="flex justify-between items-center">
+    <Card className="h-full flex flex-col" data-testid="template-list-card">
+      <div className="p-6 flex flex-col h-full">
+        <div className="flex justify-between items-center mb-5">
           <h2 className="text-2xl font-bold text-foreground">Templates</h2>
           <Select value={selectedDomain} onValueChange={setSelectedDomain}>
             <SelectTrigger
@@ -297,7 +297,7 @@ export default function TemplateList({
           </Select>
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-grow">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -307,7 +307,7 @@ export default function TemplateList({
               items={filteredTemplates.map(t => t.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-4">
+              <div className="space-y-4 pr-4">
                 {filteredTemplates.map((template) => (
                   <SortableTemplateItem
                     key={template.id}
