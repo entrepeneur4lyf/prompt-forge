@@ -277,38 +277,38 @@ export function registerRoutes(app: Express): Server {
             break;
 
         case 'openrouter':
-          try {
-            console.log("Backend - OpenRouter request:", {
-              model: req.body.model || "anthropic/claude-3-haiku",
-              hasApiKey: !!apiKey
-            });
-
-            response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
-                'X-Title': 'Prompt Template Manager',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
+            try {
+              console.log("Backend - OpenRouter request:", {
                 model: req.body.model || "anthropic/claude-3-haiku",
-                messages: [{
-                  role: "user",
-                  content: req.body.prompt
-                }],
-                temperature: 0.7,
-                max_tokens: 1024,
-              })
-            });
-          } catch (error) {
-            console.error("Backend - OpenRouter API request error:", {
-              error: error instanceof Error ? error.message : String(error),
-              stack: error instanceof Error ? error.stack : undefined
-            });
-            throw error;
-          }
-          break;
+                hasApiKey: !!apiKey
+              });
+
+              response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+                  'X-Title': 'Prompt Template Manager',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: req.body.model || "anthropic/claude-3-haiku",
+                  messages: [{
+                    role: "user",
+                    content: req.body.prompt
+                  }],
+                  temperature: 0.7,
+                  max_tokens: 1024,
+                })
+              });
+            } catch (error) {
+              console.error("Backend - OpenRouter API request error:", {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+              });
+              throw error;
+            }
+            break;
 
         default:
           throw new Error(`Unsupported provider: ${provider}`);
