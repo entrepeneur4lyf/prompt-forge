@@ -1,0 +1,68 @@
+Auto Router
+openrouter/auto
+
+Chat
+Created Nov 8, 2023
+2,000,000 context
+Pricing varied
+Your prompt will be processed by a meta-model and routed to one of dozens of models (see below), optimizing for the best possible output.
+
+To see which model was used, visit Activity, or read the model attribute of the response. Your response will be priced at the same rate as the routed model.
+
+The meta-model is powered by Not Diamond. Learn more in our docs.
+
+Requests will be routed to the following models:
+
+openai/gpt-4o-2024-08-06
+openai/gpt-4o-2024-05-13
+openai/gpt-4o-mini-2024-07-18
+openai/chatgpt-4o-latest
+openai/o1-preview-2024-09-12
+openai/o1-mini-2024-09-12
+anthropic/claude-3.5-sonnet
+anthropic/claude-3.5-haiku
+anthropic/claude-3-opus
+anthropic/claude-2.1
+google/gemini-pro-1.5
+google/gemini-flash-1.5
+mistralai/mistral-large-2407
+mistralai/mistral-nemo
+deepseek/deepseek-r1
+meta-llama/llama-3.1-70b-instruct
+meta-llama/llama-3.1-405b-instruct
+mistralai/mixtral-8x22b-instruct
+cohere/command-r-plus
+cohere/command-r
+
+API
+Sample code and API for Auto Router
+OpenRouter normalizes requests and responses across providers for you.
+Create API key
+OpenRouter provides an OpenAI-compatible completion API to 300+ models & providers that you can call directly, or using the OpenAI SDK. Additionally, some third-party SDKs are available.
+
+In the examples below, the OpenRouter-specific headers are optional. Setting them allows your app to appear on the OpenRouter leaderboards.
+
+openai-python
+python
+typescript
+curl
+
+Copy
+fetch("https://openrouter.ai/api/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer <OPENROUTER_API_KEY>",
+    "HTTP-Referer": "<YOUR_SITE_URL>", // Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "<YOUR_SITE_NAME>", // Optional. Site title for rankings on openrouter.ai.
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    "model": "openrouter/auto",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is the meaning of life?"
+      }
+    ]
+  })
+});
