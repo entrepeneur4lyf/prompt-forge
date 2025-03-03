@@ -1,5 +1,5 @@
 import { GeminiResponse, Template, CreateTemplateInput, UpdateTemplateInput } from './types';
-import { getSelectedProviderApiKey, SELECTED_PROVIDER } from './storage';
+import { getApiKeys, getSelectedProviderApiKey, SELECTED_PROVIDER } from './storage';
 
 const API_BASE = '/api';
 
@@ -20,11 +20,10 @@ export async function createTemplate(template: CreateTemplateInput): Promise<Tem
 }
 
 export async function duplicateTemplate(template: Template): Promise<Template> {
-  // Create a new template with the same content but a different name
   const { id, createdAt, updatedAt, ...rest } = template;
   const newTemplate = {
     ...rest,
-    name: `${template.name} (1)` // The backend will handle incrementing if this name exists
+    name: `${template.name} (1)` 
   };
 
   return createTemplate(newTemplate);
@@ -63,8 +62,10 @@ export async function deleteTemplate(id: number): Promise<void> {
 }
 
 export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
-  const apiKey = getSelectedProviderApiKey();
-  const selectedProvider = localStorage.getItem(SELECTED_PROVIDER);
+  const selectedProvider = localStorage.getItem(SELECTED_PROVIDER) || 'google';
+  const keys = getApiKeys();
+  const apiKey = keys[selectedProvider as keyof typeof keys];
+
   console.log('API Key present:', !!apiKey, 'Provider:', selectedProvider);
 
   if (!apiKey) {
@@ -72,23 +73,16 @@ export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   }
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
-    };
-
-    // Add OpenRouter specific headers if needed
-    if (selectedProvider === 'openrouter') {
-      headers['HTTP-Referer'] = window.location.origin;
-      headers['X-Title'] = 'Prompt Template Manager';
-    }
-
     const res = await fetch(`${API_BASE}/enhance`, {
       method: 'POST',
-      headers,
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey,
+        'X-Provider': selectedProvider,
+      },
       body: JSON.stringify({ 
         prompt,
-        provider: selectedProvider,  // Send provider to backend so it knows which API to use
+        provider: selectedProvider,
       })
     });
 
