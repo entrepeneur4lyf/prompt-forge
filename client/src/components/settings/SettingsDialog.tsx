@@ -67,6 +67,13 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [models, setModels] = useState<Model[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validatingKeys, setValidatingKeys] = useState<Record<Provider, boolean>>({
+    google: false,
+    anthropic: false,
+    openai: false,
+    deepseek: false,
+    openrouter: false,
+  });
 
   const loadModels = useCallback(async () => {
     setIsLoadingModels(true);
@@ -141,6 +148,10 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   };
 
   const handleApiKeyBlur = async (provider: Provider) => {
+    if (!apiKeys[provider]) return;
+
+    setValidatingKeys(prev => ({ ...prev, [provider]: true }));
+
     // Save the API key immediately when the field loses focus
     const updatedKeys = {
       ...apiKeys,
@@ -148,10 +159,12 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     };
     setApiKeys(updatedKeys);
 
-    // Fetch models if this is the selected provider
+    // Only fetch models if this is the selected provider
     if (provider === selectedProvider) {
       await loadModels();
     }
+
+    setValidatingKeys(prev => ({ ...prev, [provider]: false }));
   };
 
   const providerModels = models.filter(model => model.provider === selectedProvider);
@@ -235,20 +248,25 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       className="pr-10"
                       data-testid={`settings-api-key-input-${key}`}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 h-auto py-1"
-                      onClick={() => toggleApiKeyVisibility(key as Provider)}
-                      data-testid={`settings-api-key-toggle-${key}`}
-                    >
-                      {showApiKey[key as Provider] ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {validatingKeys[key as Provider] && (
+                        <LoadingSpinner className="h-4 w-4" />
                       )}
-                    </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto py-1"
+                        onClick={() => toggleApiKeyVisibility(key as Provider)}
+                        data-testid={`settings-api-key-toggle-${key}`}
+                      >
+                        {showApiKey[key as Provider] ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -122,15 +122,24 @@ export async function fetchOpenRouterModels(): Promise<Model[]> {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin, // Required by OpenRouter
+        'X-Title': 'Prompt Template Manager', // Required by OpenRouter
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch OpenRouter models: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('OpenRouter API error:', errorText);
+      return [];
     }
 
     const data = await response.json();
+    if (!data.data || !Array.isArray(data.data)) {
+      console.error('Unexpected OpenRouter API response format:', data);
+      return [];
+    }
+
     return data.data.map((model: any) => ({
       id: model.id,
       displayName: model.name || model.id,
