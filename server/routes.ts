@@ -121,7 +121,9 @@ export function registerRoutes(app: Express): Server {
 
       switch (provider) {
         case 'google':
-          const url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent");
+          // Remove 'models/' prefix if present in the model ID
+          const modelId = (req.body.model || 'gemini-pro').replace('models/', '');
+          const url = new URL(`https://generativelanguage.googleapis.com/v1beta/${modelId}:generateContent`);
           url.searchParams.append("key", apiKey.toString());
 
           console.log("Making request to Gemini API...");
