@@ -106,56 +106,106 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Gemini API Integration
+  // Gemini API Integration and OpenRouter support
   app.post("/api/enhance", async (req, res) => {
     try {
       const apiKey = req.headers["x-api-key"];
-      console.log("Enhance request received. API key present:", !!apiKey);
+      const provider = req.body.provider || 'google';
+      console.log("Enhance request received. Provider:", provider, "API key present:", !!apiKey);
 
       if (!apiKey) {
         return res.status(401).json({ message: "API key is required" });
       }
 
-      const url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent");
-      url.searchParams.append("key", apiKey.toString());
+      let response;
 
-      console.log("Making request to Gemini API...");
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: req.body.prompt,
-            }],
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          },
-        }),
-      });
+      switch (provider) {
+        case 'google':
+          const url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent");
+          url.searchParams.append("key", apiKey.toString());
 
-      console.log("Gemini API response status:", response.status);
+          console.log("Making request to Gemini API...");
+          response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: req.body.prompt,
+                }],
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+              },
+            }),
+          });
+          break;
+
+        case 'openrouter':
+          console.log("Making request to OpenRouter API...");
+          response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'HTTP-Referer': req.headers.origin || 'http://localhost:5000',
+              'X-Title': 'Prompt Template Manager',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: "anthropic/claude-3-haiku",  // Default to a reliable model
+              messages: [{
+                role: "user",
+                content: req.body.prompt
+              }],
+              temperature: 0.7,
+              max_tokens: 1024,
+            })
+          });
+          break;
+
+        // Add other providers here as needed
+        default:
+          throw new Error(`Unsupported provider: ${provider}`);
+      }
+
+      console.log("API response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Gemini API error:", errorText);
-        throw new Error(`Gemini API error: ${errorText}`);
+        console.error(`${provider} API error:`, errorText);
+        throw new Error(`${provider} API error: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("Gemini API response data:", JSON.stringify(data, null, 2));
+      console.log(`${provider} API response data:`, JSON.stringify(data, null, 2));
 
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error("Unexpected response format from Gemini API");
+      let enhancedPrompt;
+
+      // Extract the response based on provider
+      switch (provider) {
+        case 'google':
+          if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            throw new Error("Unexpected response format from Gemini API");
+          }
+          enhancedPrompt = data.candidates[0].content.parts[0].text;
+          break;
+
+        case 'openrouter':
+          if (!data.choices?.[0]?.message?.content) {
+            throw new Error("Unexpected response format from OpenRouter API");
+          }
+          enhancedPrompt = data.choices[0].message.content;
+          break;
+
+        default:
+          throw new Error(`Unsupported provider: ${provider}`);
       }
 
-      const enhancedPrompt = data.candidates[0].content.parts[0].text;
       res.json({ enhancedPrompt });
     } catch (error) {
       console.error("Error enhancing prompt:", error);

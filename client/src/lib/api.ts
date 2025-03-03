@@ -1,5 +1,5 @@
 import { GeminiResponse, Template, CreateTemplateInput, UpdateTemplateInput } from './types';
-import { getSelectedProviderApiKey } from './storage';
+import { getSelectedProviderApiKey, SELECTED_PROVIDER } from './storage';
 
 const API_BASE = '/api';
 
@@ -64,20 +64,32 @@ export async function deleteTemplate(id: number): Promise<void> {
 
 export async function enhancePrompt(prompt: string): Promise<GeminiResponse> {
   const apiKey = getSelectedProviderApiKey();
-  console.log('API Key present:', !!apiKey);
+  const selectedProvider = localStorage.getItem(SELECTED_PROVIDER);
+  console.log('API Key present:', !!apiKey, 'Provider:', selectedProvider);
 
   if (!apiKey) {
     throw new Error('API key not found for the selected provider. Please add your API key in settings.');
   }
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+    };
+
+    // Add OpenRouter specific headers if needed
+    if (selectedProvider === 'openrouter') {
+      headers['HTTP-Referer'] = window.location.origin;
+      headers['X-Title'] = 'Prompt Template Manager';
+    }
+
     const res = await fetch(`${API_BASE}/enhance`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey
-      },
-      body: JSON.stringify({ prompt })
+      headers,
+      body: JSON.stringify({ 
+        prompt,
+        provider: selectedProvider,  // Send provider to backend so it knows which API to use
+      })
     });
 
     if (!res.ok) {
