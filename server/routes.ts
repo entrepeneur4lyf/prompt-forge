@@ -161,7 +161,7 @@ export function registerRoutes(app: Express): Server {
                     temperature: 0.7,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 1024,
+                    maxOutputTokens: 2048, // Increased from 1024 to 2048 (Gemini max)
                   },
                 }),
               });
@@ -201,7 +201,7 @@ export function registerRoutes(app: Express): Server {
                     content: req.body.prompt
                   }],
                   temperature: 0.7,
-                  max_tokens: 1024
+                  max_tokens: 4096 // Increased from 1024 to 4096 (GPT max)
                 })
               });
 
@@ -236,7 +236,7 @@ export function registerRoutes(app: Express): Server {
                     role: 'user',
                     content: req.body.prompt
                   }],
-                  max_tokens: 1024
+                  max_tokens: 4096 // Increased from 1024 to 4096 (Claude max)
                 })
               });
 
@@ -270,7 +270,7 @@ export function registerRoutes(app: Express): Server {
                     content: req.body.prompt
                   }],
                   temperature: 0.7,
-                  max_tokens: 1024
+                  max_tokens: 4096 // Increased from 1024 to 4096 (DeepSeek max)
                 })
               });
 
